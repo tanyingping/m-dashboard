@@ -190,6 +190,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
         <label style="font-size:13px;color:#5f6368;margin-left:8px">标签：</label>
         <select id="storeFilterLabel" onchange="renderStores()" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px"></select>
       </div>
+      <div id="storeTableArea"></div>
     </div>
     <div id="detailPanel" class="detail"></div>
   </div>
@@ -468,10 +469,10 @@ function renderStores(){
     if(fl!=='全部'&&!s.labels.includes(fl))return false;
     return true;
   });
-  const panel=document.getElementById('storesPanel');
+  const tableArea=document.getElementById('storeTableArea');
   const info=`<div style="font-size:13px;color:#5f6368;margin-bottom:8px">共 ${filtered.length} 家门店${fc!=='全部'?' | '+fc:''}${fm!=='全部'?' | 区经:'+fm:''}${fl!=='全部'?' | 标签:'+fl:''}</div>`;
-  panel.innerHTML=info+buildTable(filtered,storeCols,storeCats,storeSortKey,storeSortDir,'toggleStoreSort',DATA.total_stores,gv);
-  panel.className='fade-in';
+  tableArea.innerHTML=info+buildTable(filtered,storeCols,storeCats,storeSortKey,storeSortDir,'toggleStoreSort',DATA.total_stores,gv);
+  document.getElementById('storesPanel').className='fade-in';
 }
 
 function renderDetail(name){

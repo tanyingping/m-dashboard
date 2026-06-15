@@ -358,6 +358,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
 const commonMetricCols = [
   {key:'store_count',label:'门店数',sortable:true,render:c=>c.store_count},
   {key:'业绩完成率',label:'业绩完成率',sortable:true,suffix:'%',bench:nat.业绩完成率,lower:true},
+  {key:'业绩目标',label:'业绩目标',sortable:true,render:c=>(c.业绩目标/10000).toFixed(0)+'万'},
   {key:'店均净收入',label:'店均净收入',sortable:true,prefix:'¥'},
   {key:'退款率',label:'退款率',sortable:true,suffix:'%',bench:nat.退款率,lower:false},
   {key:'复购完成率',label:'复购完成率',sortable:true,suffix:'%',bench:nat.复购完成率,lower:true},
@@ -384,7 +385,7 @@ const cityCols=[
   {key:'labels',label:'诊断标签',sortable:false,render:c=>c.labels.map(l=>`<span class="${getBadgeClass(l)}">${l}</span>`).join(' ')},
 ];
 const cityCats=[
-  {label:'',span:5},
+  {label:'',span:6},
   {label:'复购核心数据',span:4,color:'#b71c1c'},
   {label:'拉新核心数据',span:9,color:'#004d40'},
   {label:'',span:3},
@@ -397,7 +398,7 @@ const mgrCols=[
   {key:'labels',label:'诊断标签',sortable:false,render:c=>c.labels.map(l=>`<span class="${getBadgeClass(l)}">${l}</span>`).join(' ')},
 ];
 const mgrCats=[
-  {label:'',span:5},
+  {label:'',span:6},
   {label:'复购核心数据',span:4,color:'#b71c1c'},
   {label:'拉新核心数据',span:9,color:'#004d40'},
   {label:'',span:3},
@@ -409,6 +410,7 @@ const storeCols=[
   {key:'city',label:'城市',sortable:true,render:c=>`<span style="font-size:12px">${c.city}</span>`},
   {key:'manager',label:'区经',sortable:true,render:c=>`<span style="font-size:12px">${c.manager}</span>`},
   {key:'业绩完成率',label:'业绩完成率',sortable:true,suffix:'%',bench:nat.业绩完成率,lower:true},
+  {key:'业绩目标',label:'目标',sortable:true,render:c=>(c.业绩目标/10000).toFixed(0)+'万'},
   {key:'店均净收入',label:'净收入',sortable:true,prefix:'¥'},
   {key:'退款率',label:'退款率',sortable:true,suffix:'%',bench:nat.退款率,lower:false},
   {key:'复购完成率',label:'复购完成率',sortable:true,suffix:'%',bench:nat.复购完成率,lower:true},
@@ -429,7 +431,7 @@ const storeCols=[
   {key:'labels',label:'诊断标签',sortable:false,render:c=>c.labels.map(l=>`<span class="${getBadgeClass(l)}">${l}</span>`).join(' ')},
 ];
 const storeCats=[
-  {label:'',span:6},
+  {label:'',span:7},
   {label:'复购核心数据',span:4,color:'#b71c1c'},
   {label:'拉新核心数据',span:9,color:'#004d40'},
   {label:'',span:3},

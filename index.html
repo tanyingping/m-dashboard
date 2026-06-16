@@ -528,7 +528,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, nat)
   cols.forEach(col=>{
     const icon=sortIcon(col.key,col.sortable);
     const cls=col.key==='labels'?' class="labels-col no-sort"':(col.sortable===false?' class="no-sort"':'');
-    const onclick=col.sortable!==false&&col.key!=='labels'?' onclick="'+toggleFn+"('"+col.key+"')"":''
+    const onclick=col.sortable!==false&&col.key!=='labels'?' onclick="'+toggleFn+"('"+col.key+"')":'';
     html+='<th'+cls+onclick+'>'+col.label+icon+'</th>';
   });
   // National average row in thead

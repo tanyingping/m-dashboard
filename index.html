@@ -31,6 +31,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .table-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 200px);background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:2400px}
 .data-table thead{background:#1a237e;color:#fff;position:sticky;top:0;z-index:3}
+.data-table thead tr:first-child th{position:sticky;top:0;z-index:5}
+.data-table thead tr:nth-child(2) th{position:sticky;top:32px;z-index:5}
+.data-table .avg-row td{position:sticky;top:64px;z-index:4;background:#e3f2fd;font-weight:600}
 .data-table th.cat-header{padding:6px 6px;font-size:12px;letter-spacing:1px;font-weight:700;text-transform:uppercase}
 .data-table th{padding:10px 6px;text-align:center;font-weight:600;white-space:nowrap;font-size:12px;cursor:pointer;user-select:none;position:relative;transition:background .15s}
 .data-table th:hover{background:#283593}
@@ -237,6 +240,22 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
     const onclick=col.sortable!==false?` onclick="${toggleFn}('${col.key}')"`:''
     html+=`<th${cls}${onclick}>${col.label}${icon}</th>`;
   });
+  // Avg row in thead (sticky)
+  html+='</tr><tr class="avg-row">';
+  html+='<td class="city-col" style="position:sticky;left:0;z-index:5;background:#e3f2fd;font-weight:600;min-width:70px">全国均值</td>';
+  cols.slice(1).forEach(col=>{
+    if(['labels','cities','store','manager','city'].includes(col.key)){html+='<td></td>';return;}
+    if(col.key==='store_count'){html+=`<td>${totalStores}</td>`;return;}
+    if(col.key==='复购客单价'){html+=`<td>${nat.复购客单价!=null?'¥'+nat.复购客单价:'-'}</td>`;return;}
+    if(col.key==='盘点金额_30'){html+=`<td>${(nat.盘点金额_30/10000).toFixed(1)}万</td>`;return;}
+    if(col.key==='盘点金额_90'){html+=`<td>${(nat.盘点金额_90/10000).toFixed(1)}万</td>`;return;}
+    if(col.key==='店均体验课'){const to=items.reduce((s,c)=>s+(c.体验课订单数||0),0);html+=`<td>${(to/totalStores).toFixed(1)}单</td>`;return;}
+    const natMap={'业绩完成率':nat.业绩完成率,'拉新完成率':nat.拉新完成率,'复购完成率':nat.复购完成率,'退款率':nat.退款率,'店均拉新':nat.店均拉新,'复购率':nat.复购率,'上课率':nat.上课率,'体验课下单转化率':nat.体验课下单转化率,'消课转化率':nat.消课转化率,'拉新客单价':nat.拉新客单价,'人力成本占比':nat.人力成本占比,'教练比':nat.教练比,'店均净收入':nat.店均净收入,'复购店均净收入':nat.复购店均净收入,'拉新店均净收入':nat.拉新店均净收入,'盘点率_30':nat.盘点率_30,'预估复购率_30':nat.预估复购率_30,'咬合度_30':nat.咬合度_30,'盘点率_90':nat.盘点率_90,'预估复购率_90':nat.预估复购率_90,'咬合度_90':nat.咬合度_90,'复购目标占比':nat.复购目标占比};
+    if(natMap[col.key]!==undefined){html+=`<td>${(col.prefix||'')+natMap[col.key]+(col.suffix||'')}</td>`;return;}
+    const vals=items.map(c=>c[col.key]).filter(v=>typeof v==='number');
+    const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—';
+    html+=`<td>${(col.prefix||'')+avg+(col.suffix||'')}</td>`;
+  });
   html+='</tr></thead><tbody>';
   sorted.forEach(item=>{
     const oc = '';
@@ -260,22 +279,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
     });
     html+='</tr>';
   });
-  // Avg row
-  html+='<tr class="avg-row"><td class="city-col">全国均值</td>';
-  cols.slice(1).forEach(col=>{
-    if(['labels','cities','store','manager','city'].includes(col.key)){html+='<td></td>';return;}
-    if(col.key==='store_count'){html+=`<td>${totalStores}</td>`;return;}
-    if(col.key==='复购客单价'){html+=`<td>${nat.复购客单价!=null?'¥'+nat.复购客单价:'-'}</td>`;return;}
-    if(col.key==='盘点金额_30'){html+=`<td>${(nat.盘点金额_30/10000).toFixed(1)}万</td>`;return;}
-    if(col.key==='盘点金额_90'){html+=`<td>${(nat.盘点金额_90/10000).toFixed(1)}万</td>`;return;}
-    if(col.key==='店均体验课'){const to=items.reduce((s,c)=>s+(c.体验课订单数||0),0);html+=`<td>${(to/totalStores).toFixed(1)}单</td>`;return;}
-    const natMap={'业绩完成率':nat.业绩完成率,'拉新完成率':nat.拉新完成率,'复购完成率':nat.复购完成率,'退款率':nat.退款率,'店均拉新':nat.店均拉新,'复购率':nat.复购率,'上课率':nat.上课率,'体验课下单转化率':nat.体验课下单转化率,'消课转化率':nat.消课转化率,'拉新客单价':nat.拉新客单价,'人力成本占比':nat.人力成本占比,'店均净收入':nat.店均净收入,'复购店均净收入':nat.复购店均净收入,'拉新店均净收入':nat.拉新店均净收入,'盘点率_30':nat.盘点率_30,'盘点金额_30':nat.盘点金额_30,'预估复购率_30':nat.预估复购率_30,'咬合度_30':nat.咬合度_30,'盘点率_90':nat.盘点率_90,'盘点金额_90':nat.盘点金额_90,'预估复购率_90':nat.预估复购率_90,'咬合度_90':nat.咬合度_90,'复购目标占比':nat.复购目标占比};
-    if(natMap[col.key]!==undefined){html+=`<td>${(col.prefix||'')+natMap[col.key]+(col.suffix||'')}</td>`;return;}
-    const vals=items.map(c=>c[col.key]).filter(v=>typeof v==='number');
-    const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—';
-    html+=`<td>${(col.prefix||'')+avg+(col.suffix||'')}</td>`;
-  });
-  html+='</tr></tbody></table></div>';
+  html+='</tbody></table></div>';
   return html;
 }
 
@@ -509,14 +513,13 @@ function checkPwd(){
     document.getElementById('lockOverlay').classList.add('unlocked');
     document.getElementById('app').classList.add('show');
     setTimeout(()=>document.getElementById('lockOverlay').remove(),500);
-    renderCityList();
     renderOverview();
   }else{
     document.getElementById('lockError').textContent='密码错误，请重试';
     document.getElementById('lockInput').value='';
   }
 }
-renderCityList();renderOverview();
+renderOverview();
 
 </script>
 </div>

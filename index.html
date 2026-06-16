@@ -555,7 +555,8 @@ function getReward(group, rank) {
 }
 
 let incSortKey = 'rank', incSortDir = 'asc';
-let incFilterCity = 'all', incFilterMgr = 'all', incFilterName = '';
+let incFilterCity = 'all', incFilterMgr = 'all', incFilterName = '', incFilterGroup = 'all';
+let incRewardExpanded = true;
 
 function toggleIncSort(key) {
   if (incSortKey === key) { incSortDir = incSortDir==='asc'?'desc':'asc'; }
@@ -563,22 +564,16 @@ function toggleIncSort(key) {
   renderIncentive();
 }
 
-function initIncFilters() {
+function populateIncFilterOptions() {
   const cities = [...new Set(INC_STORES.map(s=>s.c))].sort();
   const mgrs = [...new Set(INC_STORES.map(s=>s.m))].sort();
-  const citySel = document.getElementById('incFilterCity');
-  const mgrSel = document.getElementById('incFilterMgr');
-  citySel.innerHTML = '<option value="all">全部城市</option>' + cities.map(c=>'<option>'+c+'</option>').join('');
-  mgrSel.innerHTML = '<option value="all">全部区经</option>' + mgrs.map(m=>'<option>'+m+'</option>').join('');
-  document.getElementById('incFilterCity').addEventListener('change', e=>{incFilterCity=e.target.value;renderIncentive();});
-  document.getElementById('incFilterMgr').addEventListener('change', e=>{incFilterMgr=e.target.value;renderIncentive();});
-  document.getElementById('incFilterName').addEventListener('input', e=>{incFilterName=e.target.value;renderIncentive();});
+  document.getElementById('incFilterCity').innerHTML = '<option value="all">全部城市</option>' + cities.map(c=>'<option value="'+c+'"'+(c===incFilterCity?' selected':'')+'>'+c+'</option>').join('');
+  document.getElementById('incFilterMgr').innerHTML = '<option value="all">全部区经</option>' + mgrs.map(m=>'<option value="'+m+'"'+(m===incFilterMgr?' selected':'')+'>'+m+'</option>').join('');
+  document.getElementById('incFilterGroup').value = incFilterGroup;
+  document.getElementById('incFilterName').value = incFilterName;
 }
-let incFiltersInited = false;
 
 function renderIncentive() {
-  if (!incFiltersInited) { incFiltersInited = true; initIncFilters(); }
-
   // Prepare data with group and rank
   const data = INC_STORES.map(s => ({
     ...s,
@@ -600,6 +595,7 @@ function renderIncentive() {
 
   // Apply filters
   let filtered = data;
+  if (incFilterGroup !== 'all') filtered = filtered.filter(s => s.group === incFilterGroup);
   if (incFilterCity !== 'all') filtered = filtered.filter(s => s.c === incFilterCity);
   if (incFilterMgr !== 'all') filtered = filtered.filter(s => s.m === incFilterMgr);
   if (incFilterName) filtered = filtered.filter(s => s.s.includes(incFilterName));
@@ -626,11 +622,6 @@ function renderIncentive() {
     });
   }
 
-  // Summary stats
-  const totalEligible = data.filter(s => s.baseline && s.reward != null).length;
-  const totalReward = data.filter(s => s.baseline && s.reward != null).reduce((sum, s) => sum + s.reward, 0);
-  const baselineCount = data.filter(s => s.baseline).length;
-
   function sortIcon(key, sortable) {
     if (sortable === false) return '';
     if (incSortKey === key) return incSortDir === 'asc' ? '<span class="sort-icon asc">▲</span>' : '<span class="sort-icon desc">▼</span>';
@@ -652,30 +643,39 @@ function renderIncentive() {
   ];
 
   let html = '';
-  // Filter bar
+  // Filter bar with inline event handlers
   html += '<div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center">';
-  html += '<label style="font-size:13px;color:#5f6368">城市：</label>';
-  html += '<select id="incFilterCity" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px"></select>';
+  html += '<label style="font-size:13px;color:#5f6368">分组：</label>';
+  html += '<select id="incFilterGroup" onchange="incFilterGroup=this.value;renderIncentive()" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px">';
+  html += '<option value="all">全部分组</option>';
+  html += '<option value="A">A组(头部)</option><option value="B">B组(中高)</option><option value="C">C组(中腰)</option>';
+  html += '</select>';
+  html += '<label style="font-size:13px;color:#5f6368;margin-left:8px">城市：</label>';
+  html += '<select id="incFilterCity" onchange="incFilterCity=this.value;renderIncentive()" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px"></select>';
   html += '<label style="font-size:13px;color:#5f6368;margin-left:8px">区经：</label>';
-  html += '<select id="incFilterMgr" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px"></select>';
+  html += '<select id="incFilterMgr" onchange="incFilterMgr=this.value;renderIncentive()" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px"></select>';
   html += '<label style="font-size:13px;color:#5f6368;margin-left:8px">门店名称：</label>';
-  html += '<input id="incFilterName" type="text" placeholder="搜索门店..." style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:180px">';
+  html += '<input id="incFilterName" type="text" placeholder="搜索门店..." oninput="incFilterName=this.value;renderIncentive()" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:180px">';
   html += '<span style="font-size:12px;color:#999;margin-left:8px">共 ' + filtered.length + ' 家门店</span>';
   html += '</div>';
 
-  // Reward reference table
+  // Collapsible reward reference table
   html += '<div style="background:#fff;border-radius:10px;padding:14px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
-  html += '<div style="font-size:14px;font-weight:600;margin-bottom:10px;color:#1a237e">奖励标准</div>';
-  html += '<table style="font-size:12px;border-collapse:collapse;width:100%"><tr style="background:#f5f5f5"><th style="padding:6px 10px;text-align:left;border:1px solid #e0e0e0">分组</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">第1名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">第2名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">第3名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">4-6名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">7-10名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">11-15名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">16-20名</th></tr>';
-  [['A','A组(头部)'],['B','B组(中高)'],['C','C组(中腰)']].forEach(([g,name])=>{
-    const t = REWARD_TABLE[g];
-    const vals = [t[1]||'—',t[2]||'—',t[3]||'—',t[6]||'—',t[10]||'—',t[15]||'—',t[20]||'—'];
-    html += '<tr><td style="padding:6px 10px;border:1px solid #e0e0e0;font-weight:600">' + name + '</td>';
-    vals.forEach(v => { html += '<td style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">' + (v==='—'?'<span style="color:#999">—</span>':'¥'+v) + '</td>'; });
-    html += '</tr>';
-  });
-  html += '</table>';
-  html += '<div style="font-size:11px;color:#999;margin-top:6px">底线目标：净收入需达到 max(业绩目标×80%, 10万)。预估奖励仅按排名计算，实际发放需达成底线目标。</div>';
+  html += '<div onclick="incRewardExpanded=!incRewardExpanded;renderIncentive()" style="font-size:14px;font-weight:600;color:#1a237e;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px">';
+  html += '<span style="display:inline-block;transition:transform 0.2s;transform:rotate(' + (incRewardExpanded ? '90' : '0') + 'deg);font-size:12px">▶</span>';
+  html += '奖励标准</div>';
+  if (incRewardExpanded) {
+    html += '<table style="font-size:12px;border-collapse:collapse;width:100%;margin-top:10px"><tr style="background:#f5f5f5"><th style="padding:6px 10px;text-align:left;border:1px solid #e0e0e0">分组</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">第1名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">第2名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">第3名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">4-6名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">7-10名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">11-15名</th><th style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">16-20名</th></tr>';
+    [['A','A组(头部)'],['B','B组(中高)'],['C','C组(中腰)']].forEach(([g,name])=>{
+      const t = REWARD_TABLE[g];
+      const vals = [t[1]||'—',t[2]||'—',t[3]||'—',t[6]||'—',t[10]||'—',t[15]||'—',t[20]||'—'];
+      html += '<tr><td style="padding:6px 10px;border:1px solid #e0e0e0;font-weight:600">' + name + '</td>';
+      vals.forEach(v => { html += '<td style="padding:6px 10px;text-align:center;border:1px solid #e0e0e0">' + (v==='—'?'<span style="color:#999">—</span>':'¥'+v) + '</td>'; });
+      html += '</tr>';
+    });
+    html += '</table>';
+    html += '<div style="font-size:11px;color:#999;margin-top:6px">底线目标：净收入需达到 max(业绩目标×80%, 10万)。预估奖励仅按排名计算，实际发放需达成底线目标。</div>';
+  }
   html += '</div>';
 
   // Main table
@@ -741,6 +741,8 @@ function renderIncentive() {
 
   html += '</tbody></table></div>';
   document.getElementById('incentivePanel').innerHTML = html;
+  // Restore filter values after innerHTML rebuild
+  populateIncFilterOptions();
   document.getElementById('incentivePanel').className = 'fade-in';
 }
 

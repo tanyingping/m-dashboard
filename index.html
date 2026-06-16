@@ -33,7 +33,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
 .data-table thead{background:#1a237e;color:#fff;position:sticky;top:0;z-index:3}
 .data-table thead tr:first-child th{position:sticky;top:0;z-index:5}
 .data-table thead tr:nth-child(2) th{position:sticky;top:32px;z-index:5}
-.data-table .avg-row td{position:sticky;top:64px;z-index:4;background:#e3f2fd;font-weight:600}
+.data-table .avg-row td{position:sticky;top:64px;z-index:4;background:#bbdefb;font-weight:700;font-size:13px;color:#0d47a1;border-bottom:2px solid #1565c0}
 .data-table th.cat-header{padding:6px 6px;font-size:12px;letter-spacing:1px;font-weight:700;text-transform:uppercase}
 .data-table th{padding:10px 6px;text-align:center;font-weight:600;white-space:nowrap;font-size:12px;cursor:pointer;user-select:none;position:relative;transition:background .15s}
 .data-table th:hover{background:#283593}
@@ -42,7 +42,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
 .data-table td:first-child{background:#fff}
 .data-table tbody tr:hover td:first-child{background:#f5f7ff}
 .data-table tbody tr.selected td:first-child{background:var(--primary-light)}
-.data-table .avg-row td:first-child{background:#e3f2fd}
+.data-table .avg-row td:first-child{background:#bbdefb;color:#0d47a1}
 .data-table th:first-child::after,.data-table td:first-child::after{content:'';position:absolute;top:0;right:-6px;bottom:0;width:6px;pointer-events:none;background:linear-gradient(to right,rgba(0,0,0,.08),transparent)}
 .data-table th.no-sort{cursor:default}
 .data-table th.no-sort:hover{background:#1a237e}
@@ -54,8 +54,8 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
 .data-table tbody tr:hover{background:#f5f7ff}
 .data-table tbody tr.selected{background:var(--primary-light)}
 .data-table .city-col{text-align:left;font-weight:600;white-space:nowrap;min-width:70px}
-.data-table .avg-row{background:#e3f2fd;font-weight:600;cursor:default}
-.data-table .avg-row:hover{background:#e3f2fd}
+.data-table .avg-row{background:#bbdefb;font-weight:700;cursor:default}
+.data-table .avg-row:hover{background:#bbdefb}
 .cell-good{color:var(--success);font-weight:600}
 .cell-bad{color:var(--danger);font-weight:700}
 .cell-warn{color:#e37400;font-weight:600}
@@ -242,7 +242,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
   });
   // Avg row in thead (sticky)
   html+='</tr><tr class="avg-row">';
-  html+='<td class="city-col" style="position:sticky;left:0;z-index:5;background:#e3f2fd;font-weight:600;min-width:70px">全国均值</td>';
+  html+='<td class="city-col" style="position:sticky;left:0;z-index:5;background:#bbdefb;font-weight:700;color:#0d47a1;min-width:70px;border-bottom:2px solid #1565c0">全国均值</td>';
   cols.slice(1).forEach(col=>{
     if(['labels','cities','store','manager','city'].includes(col.key)){html+='<td></td>';return;}
     if(col.key==='store_count'){html+=`<td>${totalStores}</td>`;return;}

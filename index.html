@@ -152,7 +152,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
       <button class="tab-btn" data-tab="manager" onclick="switchTab('manager')">区经对比</button>
       <button class="tab-btn" data-tab="stores" onclick="switchTab('stores')">门店明细</button>
       <button class="tab-btn" data-tab="detail" onclick="switchTab('detail')">城市明细</button>
-      <button class="tab-btn" data-tab="incentive" onclick="switchTab('incentive')">激励看板</button>
+      <button class="tab-btn" data-tab="incentive" onclick="switchTab('incentive')">净收入赛马</button>
     </div>
     <div id="overviewPanel" class="fade-in"></div>
     <div id="managerPanel" class="detail"></div>
@@ -584,7 +584,7 @@ function renderIncentive() {
     ...s,
     group: getGroup(s.pt),
     groupTarget: s.pt >= 200000 ? '≥20万' : (s.pt >= 150000 ? '≥15万' : '<15万'),
-    baseline: s.cr >= 80 && s.ns >= 100000,
+    baseline: (s.pt * 0.8 > 100000 ? s.pt * 0.8 : 100000) <= s.ns,
     crGap: Math.max(0, 80 - s.cr),
     nsGap: Math.max(0, 100000 - s.ns),
   }));
@@ -675,7 +675,7 @@ function renderIncentive() {
     html += '</tr>';
   });
   html += '</table>';
-  html += '<div style="font-size:11px;color:#999;margin-top:6px">底线目标：业绩完成率≥80% 且 净收入≥10万。预估奖励仅按排名计算，实际发放需达成底线目标。</div>';
+  html += '<div style="font-size:11px;color:#999;margin-top:6px">底线目标：净收入需达到 max(业绩目标×80%, 10万)。预估奖励仅按排名计算，实际发放需达成底线目标。</div>';
   html += '</div>';
 
   // Main table
@@ -710,13 +710,12 @@ function renderIncentive() {
       } else if (col.key === 't') {
         html += '<td style="font-size:11px">' + s.t + '</td>';
       } else if (col.key === 'baseline') {
-        if (s.baseline) {
-          html += '<td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#e6f4ea;color:#34a853">已达成</span></td>';
+        const threshold = s.pt * 0.8 > 100000 ? s.pt * 0.8 : 100000;
+        const gap = threshold - s.ns;
+        if (gap <= 0) {
+          html += '<td style="color:#34a853;font-weight:700">已达成</td>';
         } else {
-          let gap = [];
-          if (s.cr < 80) gap.push('完成率差' + (80 - s.cr).toFixed(1) + '%');
-          if (s.ns < 100000) gap.push('净收入差¥' + ((100000 - s.ns)/10000).toFixed(1) + '万');
-          html += '<td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#fce8e6;color:#ea4335">未达成</span><div style="font-size:10px;color:#999;margin-top:2px">' + gap.join(' / ') + '</div></td>';
+          html += '<td style="color:#ea4335;font-weight:600">差' + (gap/10000).toFixed(1) + '万</td>';
         }
       } else if (col.key === 'reward') {
         if (s.reward != null) {

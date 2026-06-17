@@ -294,39 +294,61 @@ function buildFilteredData(filter) {
 function buildFilterBar(containerId, filter, onTypeChange, onStatusChange) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  function renderGroup(id, label, allItems, selected, onChange) {
+  if (el.dataset.fbInit === 'true') {
+    // Already initialized — just sync checkbox states & display text (do NOT rebuild DOM)
+    [containerId+'_type', containerId+'_status'].forEach(gid => {
+      const ms = document.getElementById(gid);
+      if (!ms) return;
+      const isType = gid.endsWith('_type');
+      const items = isType ? ALL_TYPES : ALL_STATUSES;
+      const selected = isType ? filter.types : filter.statuses;
+      const allSel = items.every(i => selected.has(i));
+      ms.querySelectorAll('input[name=item]').forEach(cb => { cb.checked = selected.has(cb.value); });
+      ms.querySelectorAll('input[name=all]').forEach(cb => { cb.checked = allSel; });
+      const b = ms.querySelector(':scope > div:first-child b');
+      if (b) b.textContent = allSel ? '全部' : selected.size+'项';
+    });
+    return;
+  }
+  el.dataset.fbInit = 'true';
+  function renderGroup(id, label, allItems, selected) {
     const allSel = allItems.every(i => selected.has(i));
     const count = selected.size;
     let h = '<div style="position:relative;display:inline-block" class="multi-select" id="'+id+'">';
-    h += '<div onclick="this.parentElement.classList.toggle(\'open\')" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;cursor:pointer;background:#fff;min-width:100px;user-select:none">';
+    h += '<div style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;cursor:pointer;background:#fff;min-width:100px;user-select:none">';
     h += '<span style="color:#5f6368">'+label+'：</span>';
     h += allSel ? '<b>全部</b>' : '<b>'+count+'项</b>';
     h += ' <span style="font-size:10px;color:#999">▼</span></div>';
     h += '<div class="ms-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #e0e0e0;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);min-width:160px;padding:6px 0;margin-top:4px">';
-    h += '<label style="display:flex;align-items:center;padding:4px 12px;cursor:pointer;font-size:13px;gap:6px"><input type="checkbox" '+(allSel?'checked':'')+' onchange="var p=this.closest(\'.multi-select\');p.querySelectorAll(\'input[type=checkbox]:not(:first-child)\').forEach(c=>c.checked=this.checked);p.dispatchEvent(new Event(\'fc\'))">全选</label>';
+    h += '<label style="display:flex;align-items:center;padding:4px 12px;cursor:pointer;font-size:13px;gap:6px"><input type="checkbox" name="all" '+(allSel?'checked':'')+' onchange="var p=this.closest(\'.multi-select\');p.querySelectorAll(\'input[name=item]\').forEach(c=>c.checked=this.checked);p.dispatchEvent(new Event(\'fc\'))">全选</label>';
     h += '<div style="height:1px;background:#e0e0e0;margin:4px 0"></div>';
     allItems.forEach(item => {
-      h += '<label style="display:flex;align-items:center;padding:4px 12px;cursor:pointer;font-size:13px;gap:6px"><input type="checkbox" '+(selected.has(item)?'checked':'')+' value="'+item+'" onchange="this.closest(\'.multi-select\').dispatchEvent(new Event(\'fc\'))">'+item+'</label>';
+      h += '<label style="display:flex;align-items:center;padding:4px 12px;cursor:pointer;font-size:13px;gap:6px"><input type="checkbox" name="item" '+(selected.has(item)?'checked':'')+' value="'+item+'" onchange="this.closest(\'.multi-select\').dispatchEvent(new Event(\'fc\'))">'+item+'</label>';
     });
     h += '</div></div>';
     return h;
   }
   el.innerHTML = renderGroup(containerId+'_type','FM门店类型',ALL_TYPES,filter.types) + ' ' + renderGroup(containerId+'_status','营业状态',ALL_STATUSES,filter.statuses);
-  // Add toggle + change handlers
+  // Add toggle + change handlers (attached once, persist across renders)
   el.querySelectorAll('.multi-select').forEach(ms => {
-    ms.querySelector(':scope > div:first-child').onclick = () => {
-      // close others
-      el.querySelectorAll('.multi-select').forEach(o => { if(o!==ms) o.classList.remove('open'); });
+    ms.querySelector(':scope > div:first-child').onclick = (e) => {
+      e.stopPropagation();
+      el.querySelectorAll('.multi-select').forEach(o => { if(o!==ms){ o.classList.remove('open'); o.querySelectorAll('.ms-dropdown').forEach(d=>d.style.display='none'); }});
       ms.classList.toggle('open');
       ms.querySelectorAll('.ms-dropdown').forEach(d => d.style.display = ms.classList.contains('open') ? 'block' : 'none');
     };
     ms.addEventListener('fc', () => {
       const id = ms.id;
       const isType = id.endsWith('_type');
-      const boxes = ms.querySelectorAll('input[type=checkbox]:not(:first-child)');
+      const boxes = ms.querySelectorAll('input[name=item]');
       const newSet = new Set();
       boxes.forEach(b => { if(b.checked) newSet.add(b.value); });
       if (newSet.size === 0) { boxes.forEach(b => { b.checked = true; newSet.add(b.value); }); }
+      // Update "全选" checkbox state
+      ms.querySelectorAll('input[name=all]').forEach(cb => { cb.checked = newSet.size === (isType?ALL_TYPES:ALL_STATUSES).length; });
+      // Update display text
+      const b = ms.querySelector(':scope > div:first-child b');
+      if (b) b.textContent = newSet.size === (isType?ALL_TYPES:ALL_STATUSES).length ? '全部' : newSet.size+'项';
       if (isType) { filter.types = newSet; onTypeChange(); }
       else { filter.statuses = newSet; onStatusChange(); }
     });
@@ -901,9 +923,13 @@ function renderIncentive() {
         const medal = s.rank <= 3 ? ['🥇','🥈','🥉'][s.rank-1] : '';
         html += '<td style="font-weight:700">' + medal + s.rank + '</td>';
       } else if (col.key === 's') {
-        html += '<td style="text-align:left;font-weight:600;font-size:12px;min-width:180px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + s.s + '">' + s.s + '</td>';
+        html += '<td style="text-align:left;font-weight:600;font-size:11px;min-width:150px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + s.s + '">' + s.s + '</td>';
       } else if (col.key === 't') {
-        html += '<td style="font-size:11px">' + s.t + '</td>';
+        html += '<td style="font-size:10px">' + s.t + '</td>';
+      } else if (col.key === 'c') {
+        html += '<td style="font-size:10px">' + s.c + '</td>';
+      } else if (col.key === 'm') {
+        html += '<td style="font-size:10px">' + s.m + '</td>';
       } else if (col.key === 'baseline') {
         const threshold = s.pt * 0.8 > 100000 ? s.pt * 0.8 : 100000;
         const gap = threshold - s.ns;
@@ -1115,9 +1141,13 @@ function renderLxRace() {
         const inRange = s.rank <= s.zoneTopN;
         html += '<td style="font-weight:700;color:'+(inRange?'#e65100':'#999')+'">' + medal + s.rank + '</td>';
       } else if (col.key === 's') {
-        html += '<td style="text-align:left;font-weight:600;font-size:12px;min-width:180px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + s.s + '">' + s.s + '</td>';
+        html += '<td style="text-align:left;font-weight:600;font-size:11px;min-width:150px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + s.s + '">' + s.s + '</td>';
       } else if (col.key === 't') {
-        html += '<td style="font-size:11px">' + s.t + '</td>';
+        html += '<td style="font-size:10px">' + s.t + '</td>';
+      } else if (col.key === 'c') {
+        html += '<td style="font-size:10px">' + s.c + '</td>';
+      } else if (col.key === 'm') {
+        html += '<td style="font-size:10px">' + s.m + '</td>';
       } else if (col.key === 'lxRaw') {
         html += '<td style="font-weight:600">' + s.lxRaw + '</td>';
       } else if (col.key === 'lxEff') {

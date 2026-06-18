@@ -155,6 +155,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
       <button class="tab-btn" data-tab="detail" onclick="switchTab('detail')">城市明细</button>
       <button class="tab-btn" data-tab="incentive" onclick="switchTab('incentive')">净收入赛马</button>
       <button class="tab-btn" data-tab="lxrace" onclick="switchTab('lxrace')">拉新赛马</button>
+      <button class="tab-btn" data-tab="dqz" onclick="switchTab('dqz')">大区总对比</button>
     </div>
     <div id="overviewPanel" class="fade-in"><div id="ovFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="ovContent"></div></div>
     <div id="managerPanel" class="detail"><div id="mgrFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="mgrContent"></div></div>
@@ -173,6 +174,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
     <div id="detailPanel" class="detail"><div id="dtlFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="dtlContent"></div></div>
     <div id="incentivePanel" class="detail"></div>
     <div id="lxPanel" class="detail"></div>
+    <div id="dqzPanel" class="detail"><div id="dqzFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="dqzContent"></div></div>
   </div>
 </div>
 <script>
@@ -186,6 +188,7 @@ const ovFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
 const mgrFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
 const storeFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
 const dtlFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
+const dqzFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
 
 function filterStores(filter) {
   return RAW_STORES.filter(s => filter.types.has(s.type) && filter.statuses.has(s.status));
@@ -400,11 +403,13 @@ function switchTab(tab){
   document.getElementById('detailPanel').style.display=tab==='detail'?'block':'none';
   document.getElementById('incentivePanel').style.display=tab==='incentive'?'block':'none';
   document.getElementById('lxPanel').style.display=tab==='lxrace'?'block':'none';
+  document.getElementById('dqzPanel').style.display=tab==='dqz'?'block':'none';
   if(tab==='overview')renderOverview();
   if(tab==='manager')renderManager();
   if(tab==='stores'){initStoreFilters();renderStores();}
   if(tab==='incentive')renderIncentive();
   if(tab==='lxrace')renderLxRace();
+  if(tab==='dqz')renderDqz();
 }
 
 function toggleSort(key){if(sortKey===key){sortDir=sortDir==='asc'?'desc':'asc';}else{sortKey=key;sortDir='desc';}renderOverview();}
@@ -1193,6 +1198,158 @@ function renderLxRace() {
   document.getElementById('lxFilterName').value = lxFilterName;
 
   document.getElementById('lxPanel').className = 'fade-in';
+}
+
+// === DQZ (大区总对比) ===
+const DQZ_MAP = {
+  '天津市':'叶青青','重庆市':'叶青青','北京市':'叶青青','长沙市':'叶青青',
+  '武汉市':'叶青青','上海市':'叶青青','苏州市':'叶青青','无锡市':'叶青青',
+  '成都市':'叶青青','宁波市':'叶青青','济南市':'叶青青',
+  '广州市':'吉博文','杭州市':'吉博文','南京市':'吉博文','深圳市':'吉博文',
+  '青岛市':'吉博文','合肥市':'吉博文','西安市':'吉博文','郑州市':'吉博文'
+};
+let dqzSortKey = '业绩完成率', dqzSortDir = 'desc';
+function toggleDqzSort(key){if(dqzSortKey===key){dqzSortDir=dqzSortDir==='asc'?'desc':'asc';}else{dqzSortKey=key;dqzSortDir='desc';}renderDqz();}
+
+function renderDqz(){
+  const data = buildFilteredData(dqzFilter);
+  nat = data.national;
+  buildFilterBar('dqzFilterBar', dqzFilter, renderDqz, renderDqz);
+  nat = data.national;
+
+  // Group by 大区总
+  const groups = {};
+  data.stores.forEach(s => {
+    const dqz = DQZ_MAP[s.city];
+    if(!dqz) return;
+    if(!groups[dqz]) groups[dqz] = [];
+    groups[dqz].push(s);
+  });
+
+  // Re-aggregate from RAW_STORES for accurate metrics
+  const rawFiltered = filterStores(dqzFilter);
+  const dqzData = Object.entries(groups).map(([name, stores]) => {
+    const rawGroup = rawFiltered.filter(s => DQZ_MAP[s.city] === name);
+    const a = aggStores(rawGroup);
+    a.dqz = name;
+    a.store_count = rawGroup.length;
+    a.cities = [...new Set(stores.map(s=>s.city))].sort();
+    return a;
+  });
+
+  // Sort
+  const getV = (d, k) => {
+    if(k==='store_count') return d.store_count;
+    if(k==='dqz') return d.dqz;
+    return d[k]||0;
+  };
+  dqzData.sort((a,b) => {
+    let va=getV(a,dqzSortKey), vb=getV(b,dqzSortKey);
+    if(typeof va==='string') return dqzSortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    return dqzSortDir==='asc'?(va-vb):(vb-va);
+  });
+
+  // Rank (only 2, higher=better except 退款率)
+  function rank(v1,v2,lower){
+    if(v1===v2) return '—';
+    if(lower) return v1<v2?'🥇':'🥈';
+    return v1>v2?'🥇':'🥈';
+  }
+
+  const n = data.national;
+  function si(key){
+    if(dqzSortKey===key) return dqzSortDir==='asc'?'<span class="sort-icon asc">▲</span>':'<span class="sort-icon desc">▼</span>';
+    return '<span class="sort-icon">⇅</span>';
+  }
+  function th(key,label){return '<th onclick="toggleDqzSort(\''+key+'\')" style="cursor:pointer">'+label+si(key)+'</th>';}
+
+  let html = '<div style="background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px">';
+  html += '<h3 style="margin:0 0 16px;color:#1a237e;font-size:16px">大区总业绩完成度对比</h3>';
+
+  if(dqzData.length===0){
+    html += '<div style="text-align:center;padding:40px;color:#999">当前筛选条件下无匹配的大区总数据</div>';
+  } else {
+    html += '<div class="table-wrap"><table class="data-table" style="min-width:1800px;font-size:13px">';
+    // Category headers
+    html += '<thead><tr>';
+    html += '<th colspan="3" style="background:#1a237e"></th>';
+    html += '<th colspan="3" class="cat-header" style="background:#b71c1c;border-bottom:1px solid rgba(255,255,255,.2)">业绩核心</th>';
+    html += '<th colspan="3" class="cat-header" style="background:#004d40;border-bottom:1px solid rgba(255,255,255,.2)">拉新核心</th>';
+    html += '<th colspan="3" class="cat-header" style="background:#4a148c;border-bottom:1px solid rgba(255,255,255,.2)">复购核心</th>';
+    html += '<th colspan="3" class="cat-header" style="background:#e65100;border-bottom:1px solid rgba(255,255,255,.2)">体验课</th>';
+    html += '<th colspan="2" class="cat-header" style="background:#1565c0;border-bottom:1px solid rgba(255,255,255,.2)">运营</th>';
+    html += '</tr><tr>';
+    html += th('dqz','大区总')+th('store_count','门店数')+'<th>管辖城市</th>';
+    html += th('业绩完成率','业绩完成率')+th('店均净收入','店均净收入')+th('退款率','退款率');
+    html += th('拉新完成率','拉新完成率')+th('店均拉新','店均拉新')+th('拉新客单价','拉新客单价');
+    html += th('复购率','0-30天复购率')+th('复购店均净收入','复购店均净收入')+th('复购客单价','复购客单价');
+    html += th('上课率','上课率')+th('体验课下单转化率','下单转化率')+th('消课转化率','消课转化率');
+    html += th('人力成本占比','人力成本%')+th('教练比','教练比');
+    html += '</tr>';
+
+    // Avg row
+    html += '<tr class="avg-row">';
+    html += '<td style="position:sticky;left:0;z-index:5;background:#bbdefb;font-weight:700;color:#0d47a1;border-bottom:2px solid #1565c0">全国均值</td>';
+    html += '<td>'+data.total_stores+'</td><td></td>';
+    html += '<td>'+n['业绩完成率']+'%</td><td>¥'+n['店均净收入']+'</td><td>'+n['退款率']+'%</td>';
+    html += '<td>'+n['拉新完成率']+'%</td><td>'+n['店均拉新']+'人</td><td>¥'+n['拉新客单价']+'</td>';
+    html += '<td>'+n['复购率']+'%</td><td>¥'+n['复购店均净收入']+'</td><td>'+(n['复购客单价']!=null?'¥'+n['复购客单价']:'-')+'</td>';
+    html += '<td>'+n['上课率']+'%</td><td>'+n['体验课下单转化率']+'%</td><td>'+n['消课转化率']+'%</td>';
+    html += '<td>'+n['人力成本占比']+'%</td><td>'+n['教练比']+'</td>';
+    html += '</tr></thead><tbody>';
+
+    // Data rows
+    const d0 = dqzData[0], d1 = dqzData[1];
+    function cellColor(v, bench, lower, isCost){
+      if(v==null||bench==null) return '';
+      if(isCost) return v>bench?'cell-warn':'cell-good';
+      if(lower) return v>=bench?'cell-good':v<bench*0.7?'cell-bad':'cell-warn';
+      return v<=bench?'cell-good':v>bench+10?'cell-bad':'cell-warn';
+    }
+    dqzData.forEach((d,i) => {
+      const other = dqzData[1-i];
+      const rCr = rank(d['业绩完成率'],other['业绩完成率'],false);
+      const rLx = rank(d['拉新完成率'],other['拉新完成率'],false);
+      const rRef = rank(d['退款率'],other['退款率'],true);
+      const rFg = rank(d['复购率'],other['复购率'],false);
+
+      html += '<tr>';
+      html += '<td class="city-col" style="font-weight:700;font-size:14px;color:#1a237e">'+d.dqz+'</td>';
+      html += '<td style="font-weight:600">'+d.store_count+'家</td>';
+      html += '<td style="font-size:11px;text-align:left;max-width:200px;white-space:normal;line-height:1.4">'+d.cities.join('、')+'</td>';
+
+      // 业绩
+      html += '<td class="'+cellColor(d['业绩完成率'],n['业绩完成率'],false)+'"><b>'+rCr+' '+d['业绩完成率']+'%</b></td>';
+      html += '<td class="'+cellColor(d['店均净收入'],n['店均净收入'],false)+'">¥'+d['店均净收入']+'</td>';
+      html += '<td class="'+cellColor(d['退款率'],n['退款率'],false,true)+'">'+rRef+' '+d['退款率']+'%</td>';
+
+      // 拉新
+      html += '<td class="'+cellColor(d['拉新完成率'],n['拉新完成率'],false)+'"><b>'+rLx+' '+d['拉新完成率']+'%</b></td>';
+      html += '<td class="'+cellColor(d['店均拉新'],n['店均拉新'],false)+'">'+d['店均拉新']+'人</td>';
+      html += '<td>¥'+d['拉新客单价']+'</td>';
+
+      // 复购
+      html += '<td class="'+cellColor(d['复购率'],n['复购率'],false)+'"><b>'+rFg+' '+d['复购率']+'%</b></td>';
+      html += '<td>¥'+d['复购店均净收入']+'</td>';
+      html += '<td>'+(d['复购客单价']!=null?'¥'+d['复购客单价']:'-')+'</td>';
+
+      // 体验课
+      html += '<td class="'+cellColor(d['上课率'],n['上课率'],false)+'">'+d['上课率']+'%</td>';
+      html += '<td class="'+cellColor(d['体验课下单转化率'],n['体验课下单转化率'],false)+'">'+d['体验课下单转化率']+'%</td>';
+      html += '<td class="'+cellColor(d['消课转化率'],n['消课转化率'],false)+'">'+d['消课转化率']+'%</td>';
+
+      // 运营
+      html += '<td class="'+cellColor(d['人力成本占比'],n['人力成本占比'],false,true)+'">'+d['人力成本占比']+'%</td>';
+      html += '<td>'+d['教练比']+'</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+  }
+  html += '</div>';
+
+  document.getElementById('dqzContent').innerHTML = html;
+  document.getElementById('dqzPanel').className = 'fade-in';
 }
 
 </script>

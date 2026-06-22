@@ -247,13 +247,24 @@ function aggStores(stores) {
 function buildFilteredData(filter) {
   const stores = filterStores(filter);
   const nat = aggStores(stores);
+  function computeLabels(obj) {
+    const L = [];
+    if(obj['业绩完成率']<nat['业绩完成率']) L.push('业绩完成率↓');
+    if(obj['复购完成率']<nat['复购完成率']) L.push('复购完成率↓');
+    if(obj['复购率']<nat['复购率']) L.push('0-30天复购率↓');
+    if(obj['当月拉新复购率']<nat['当月拉新复购率']) L.push('当月拉新复购率↓');
+    if((obj['店均体验课']||0)<(nat['店均体验课']||0)) L.push('体验课量↓');
+    if(obj['上课率']<nat['上课率']) L.push('上课率↓');
+    if(obj['消课转化率']<nat['消课转化率']) L.push('消课转化率↓');
+    return L;
+  }
   // By city
   const cityMap = {};
   stores.forEach(s => { (cityMap[s.city] = cityMap[s.city]||[]).push(s); });
   const cities = Object.entries(cityMap).map(([city, grp]) => {
     const a = aggStores(grp);
     a.city = city; a.stores = grp.map(s=>s.name);
-    a.labels = grp.length>0 ? grp[0].labels : [];
+    a.labels = computeLabels(a);
     a.label_count = a.labels.length;
     return a;
   }).sort((a,b) => b.净销售额 - a.净销售额);
@@ -264,13 +275,13 @@ function buildFilteredData(filter) {
     const a = aggStores(grp);
     a.manager = mgr; a.stores = grp.map(s=>s.name);
     a.cities = [...new Set(grp.map(s=>s.city))];
-    a.labels = []; a.label_count = 0;
+    a.labels = computeLabels(a); a.label_count = a.labels.length;
     return a;
   }).sort((a,b) => b.净销售额 - a.净销售额);
   // Store-level
-  const storeRows = stores.map(s => ({
+  const storeRows = stores.map(s => {
+    const row = {
     store: s.name, city: s.city, manager: s.mgr, type: s.type, status: s.status,
-    labels: s.labels, label_count: s.labels.length,
     业绩目标:s.pt, 净销售额:s.ns,
     业绩完成率:s.pt?Math.round(s.ns/s.pt*1000)/10:0,
     拉新完成率:s.lx_pt?Math.round(s.lx_ns/s.lx_pt*1000)/10:0,
@@ -300,7 +311,11 @@ function buildFilteredData(filter) {
     盘点率_30:s.pd_rate_30||0, 盘点金额_30:s.pd_amount_30||0, 预估复购率_30:s.pd_est_rate_30||0, 咬合度_30:s.pd_bite_30||0,
     盘点率_90:s.pd_rate_90||0, 盘点金额_90:s.pd_amount_90||0, 预估复购率_90:s.pd_est_rate_90||0, 咬合度_90:s.pd_bite_90||0,
     lx_new:s.lx_new||0, lx_new_rebuy:s.lx_new_rebuy||0,
-  }));
+  };
+    row.labels = computeLabels(row);
+    row.label_count = row.labels.length;
+    return row;
+  });
   return {national: nat, cities, managers, stores: storeRows, total_stores: stores.length};
 }
 
@@ -384,6 +399,8 @@ document.getElementById('storeDisplay').textContent = '门店：' + _initStores.
 
 
 const labelType = {
+  '业绩完成率↓':'danger','复购完成率↓':'danger','0-30天复购率↓':'warning','当月拉新复购率↓':'warning',
+  '体验课量↓':'warning','上课率↓':'warning','消课转化率↓':'warning',
   '综合偏低':'danger','退款异常':'danger','拉新瓶颈':'danger','退款偏高':'warning',
   '拉新偏弱':'warning','复购乏力':'warning','体验课转化弱':'warning','体验课到课低':'warning',
   '体验课量偏低':'warning','拉新客单价偏低':'info','复购客单价偏低':'info','人力成本偏高':'warning',
@@ -1288,6 +1305,15 @@ function renderDqz(){
     a.dqz = name;
     a.store_count = rawGroup.length;
     a.cities = [...new Set(stores.map(s=>s.city))].sort();
+    const dn = data.national;
+    a.labels = [];
+    if(a['业绩完成率']<dn['业绩完成率']) a.labels.push('业绩完成率↓');
+    if(a['复购完成率']<dn['复购完成率']) a.labels.push('复购完成率↓');
+    if(a['复购率']<dn['复购率']) a.labels.push('0-30天复购率↓');
+    if(a['当月拉新复购率']<dn['当月拉新复购率']) a.labels.push('当月拉新复购率↓');
+    if((a['店均体验课']||0)<(dn['店均体验课']||0)) a.labels.push('体验课量↓');
+    if(a['上课率']<dn['上课率']) a.labels.push('上课率↓');
+    if(a['消课转化率']<dn['消课转化率']) a.labels.push('消课转化率↓');
     return a;
   });
 
@@ -1326,14 +1352,14 @@ function renderDqz(){
     html += '<div class="table-wrap"><table class="data-table" style="min-width:1800px;font-size:13px">';
     // Category headers
     html += '<thead><tr>';
-    html += '<th colspan="3" style="background:#1a237e"></th>';
+    html += '<th colspan="4" style="background:#1a237e"></th>';
     html += '<th colspan="3" class="cat-header" style="background:#b71c1c;border-bottom:1px solid rgba(255,255,255,.2)">业绩核心</th>';
     html += '<th colspan="3" class="cat-header" style="background:#004d40;border-bottom:1px solid rgba(255,255,255,.2)">拉新核心</th>';
     html += '<th colspan="3" class="cat-header" style="background:#4a148c;border-bottom:1px solid rgba(255,255,255,.2)">复购核心</th>';
     html += '<th colspan="3" class="cat-header" style="background:#e65100;border-bottom:1px solid rgba(255,255,255,.2)">体验课</th>';
     html += '<th colspan="2" class="cat-header" style="background:#1565c0;border-bottom:1px solid rgba(255,255,255,.2)">运营</th>';
     html += '</tr><tr>';
-    html += th('dqz','大区总')+th('store_count','门店数')+'<th>管辖城市</th>';
+    html += th('dqz','大区总')+th('store_count','门店数')+'<th>管辖城市</th><th>诊断标签</th>';
     html += th('业绩完成率','业绩完成率')+th('店均净收入','店均净收入')+th('退款率','退款率');
     html += th('拉新完成率','拉新完成率')+th('店均拉新','店均拉新')+th('拉新客单价','拉新客单价');
     html += th('复购率','0-30天复购率')+th('复购店均净收入','复购店均净收入')+th('复购客单价','复购客单价');
@@ -1344,7 +1370,7 @@ function renderDqz(){
     // Avg row
     html += '<tr class="avg-row">';
     html += '<td style="position:sticky;left:0;z-index:5;background:#bbdefb;font-weight:700;color:#0d47a1;border-bottom:2px solid #1565c0">全国均值</td>';
-    html += '<td>'+data.total_stores+'</td><td></td>';
+    html += '<td>'+data.total_stores+'</td><td></td><td></td>';
     html += '<td>'+n['业绩完成率']+'%</td><td>¥'+n['店均净收入']+'</td><td>'+n['退款率']+'%</td>';
     html += '<td>'+n['拉新完成率']+'%</td><td>'+n['店均拉新']+'人</td><td>¥'+n['拉新客单价']+'</td>';
     html += '<td>'+n['复购率']+'%</td><td>¥'+n['复购店均净收入']+'</td><td>'+(n['复购客单价']!=null?'¥'+n['复购客单价']:'-')+'</td>';
@@ -1371,6 +1397,7 @@ function renderDqz(){
       html += '<td class="city-col" style="font-weight:700;font-size:14px;color:#1a237e">'+d.dqz+'</td>';
       html += '<td style="font-weight:600">'+d.store_count+'家</td>';
       html += '<td style="font-size:11px;text-align:left;max-width:200px;white-space:normal;line-height:1.4">'+d.cities.join('、')+'</td>';
+      html += '<td style="text-align:left">'+d.labels.map(l=>'<span class="'+getBadgeClass(l)+'" style="font-size:11px">'+l+'</span>').join(' ')+'</td>';
 
       // 业绩
       html += '<td class="'+cellColor(d['业绩完成率'],n['业绩完成率'],false)+'"><b>'+rCr+' '+d['业绩完成率']+'%</b></td>';

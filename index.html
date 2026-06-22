@@ -423,24 +423,26 @@ function toggleCat(tabId, catName) {
   s.has(catName) ? s.delete(catName) : s.add(catName);
   const table = document.querySelector('#'+(tabId==='ov'?'ovContent':tabId==='mgr'?'mgrContent':'storeTableArea')+' table');
   if(!table) return;
-  const idxs = [];
-  table.querySelectorAll('thead tr:first-child th').forEach(th => {
-    if(th.dataset.cat===catName) {
-      const ci = parseInt(th.dataset.catstart);
-      const span = parseInt(th.dataset.catspan);
-      for(let i=ci;i<ci+span;i++) idxs.push(i);
-    }
-  });
   const isHidden = s.has(catName);
-  table.querySelectorAll('tr').forEach(tr => {
-    const cells = tr.children;
-    idxs.forEach(i => { if(cells[i]) cells[i].style.display = isHidden?'none':''; });
-  });
-  // Update header arrow
+  // Find category header and column range
+  let catStart = -1, catSpan = 0;
   table.querySelectorAll('thead tr:first-child th').forEach(th => {
     if(th.dataset.cat===catName) {
+      catStart = parseInt(th.dataset.catstart);
+      catSpan = parseInt(th.dataset.catspan);
+      // Update colspan: 1 when collapsed (keep 1st col as placeholder), original when expanded
+      th.colSpan = isHidden ? 1 : catSpan;
       const arrow = th.querySelector('.cat-arrow');
       if(arrow) arrow.textContent = isHidden ? '▶' : '▼';
+    }
+  });
+  if(catStart < 0) return;
+  // Toggle column visibility: when collapsed, keep 1st col visible, hide rest
+  // When expanded, show all cols
+  table.querySelectorAll('tr').forEach(tr => {
+    const cells = tr.children;
+    for(let i = catStart + 1; i < catStart + catSpan; i++) {
+      if(cells[i]) cells[i].style.display = isHidden ? 'none' : '';
     }
   });
 }
@@ -475,7 +477,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
   catInfo.forEach(ci => {
     const isCollapsed = collapsed.has(ci.name);
     if(ci.hasLabel){
-      html+=`<th colspan="${ci.span}" class="cat-header" data-cat="${ci.name}" data-catstart="${ci.startIdx}" data-catspan="${ci.span}" onclick="toggleCat('${tabId}','${ci.name}')" style="background:${ci.color};border-bottom:1px solid rgba(255,255,255,.2);font-size:13px;letter-spacing:1px;text-align:center;cursor:pointer;user-select:none"><span class="cat-arrow" style="font-size:10px;margin-right:4px">${isCollapsed?'▶':'▼'}</span>${ci.name}</th>`;
+      html+=`<th colspan="${isCollapsed ? 1 : ci.span}" class="cat-header" data-cat="${ci.name}" data-catstart="${ci.startIdx}" data-catspan="${ci.span}" onclick="toggleCat('${tabId}','${ci.name}')" style="background:${ci.color};border-bottom:1px solid rgba(255,255,255,.2);font-size:13px;letter-spacing:1px;text-align:center;cursor:pointer;user-select:none"><span class="cat-arrow" style="font-size:10px;margin-right:4px">${isCollapsed?'▶':'▼'}</span>${ci.name}</th>`;
     }else{
       html+=`<th colspan="${ci.span}" class="no-sort" style="background:#1a237e"></th>`;
     }
@@ -483,7 +485,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
   html+='</tr><tr>';
   cols.forEach((col,i)=>{
     const ci = colCatIdx[i];
-    const isCollapsed = ci && collapsed.has(ci.name);
+    const isCollapsed = ci && collapsed.has(ci.name) && i !== ci.startIdx;
     const hideStyle = isCollapsed ? ' style="display:none"' : '';
     const catAttr = ci ? ` data-cat="${ci.name}"` : '';
     const icon=sortIcon(col.key,col.sortable);
@@ -498,7 +500,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
   html+=`<td class="city-col" style="position:sticky;left:0;z-index:5;background:#bbdefb;font-weight:700;color:#0d47a1;min-width:70px;border-bottom:2px solid #1565c0${firstHidden?';display:none':''}">全国均值</td>`;
   cols.slice(1).forEach((col,i)=>{
     const ci = colCatIdx[i+1];
-    const isCollapsed = ci && collapsed.has(ci.name);
+    const isCollapsed = ci && collapsed.has(ci.name) && (i+1) !== ci.startIdx;
     const hideStyle = isCollapsed ? ' style="display:none"' : '';
     if(['labels','cities','store','manager','city'].includes(col.key)){html+=`<td${hideStyle}></td>`;return;}
     if(col.key==='store_count'){html+=`<td${hideStyle}>${totalStores}</td>`;return;}
@@ -517,7 +519,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
     html+=`<tr>`;
     cols.forEach((col,i)=>{
       const ci = colCatIdx[i];
-      const isCollapsed = ci && collapsed.has(ci.name);
+      const isCollapsed = ci && collapsed.has(ci.name) && i !== ci.startIdx;
       const hideStyle = isCollapsed ? ' style="display:none"' : '';
       if(col.render){
         const cls=(col.key==='city'||col.key==='manager'||col.key==='store')?'city-col':(col.key==='labels'?'text-col':'');

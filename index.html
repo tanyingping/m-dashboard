@@ -311,6 +311,7 @@ function buildFilteredData(filter) {
     盘点率_30:s.pd_rate_30||0, 盘点金额_30:s.pd_amount_30||0, 预估复购率_30:s.pd_est_rate_30||0, 咬合度_30:s.pd_bite_30||0,
     盘点率_90:s.pd_rate_90||0, 盘点金额_90:s.pd_amount_90||0, 预估复购率_90:s.pd_est_rate_90||0, 咬合度_90:s.pd_bite_90||0,
     lx_new:s.lx_new||0, lx_new_rebuy:s.lx_new_rebuy||0,
+    "当月拉新用户数":s.lx_new||0, "当月拉新复购率":s.lx_new?Math.round((s.lx_new_rebuy||0)/s.lx_new*1000)/10:0,
   };
     row.labels = computeLabels(row);
     row.label_count = row.labels.length;
@@ -523,8 +524,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
     if(col.key==='复购客单价'){html+=`<td${hideStyle}>${nat.复购客单价!=null?'¥'+nat.复购客单价:'-'}</td>`;return;}
     if(col.key==='盘点金额_30'){html+=`<td${hideStyle}>${(nat.盘点金额_30/10000).toFixed(1)}万</td>`;return;}
     if(col.key==='盘点金额_90'){html+=`<td${hideStyle}>${(nat.盘点金额_90/10000).toFixed(1)}万</td>`;return;}
-    if(col.key==='店均体验课'){const to=items.reduce((s,c)=>s+(c.体验课订单数||0),0);html+=`<td${hideStyle}>${(to/totalStores).toFixed(1)}单</td>`;return;}
-    const natMap={'业绩完成率':nat.业绩完成率,'拉新完成率':nat.拉新完成率,'复购完成率':nat.复购完成率,'退款率':nat.退款率,'店均拉新':nat.店均拉新,'复购率':nat.复购率,'上课率':nat.上课率,'体验课下单转化率':nat.体验课下单转化率,'消课转化率':nat.消课转化率,'拉新客单价':nat.拉新客单价,'人力成本占比':nat.人力成本占比,'教练比':nat.教练比,'店均净收入':nat.店均净收入,'复购店均净收入':nat.复购店均净收入,'拉新店均净收入':nat.拉新店均净收入,'盘点率_30':nat.盘点率_30,'预估复购率_30':nat.预估复购率_30,'咬合度_30':nat.咬合度_30,'盘点率_90':nat.盘点率_90,'预估复购率_90':nat.预估复购率_90,'咬合度_90':nat.咬合度_90,'复购目标占比':nat.复购目标占比,'当月拉新用户数':nat.当月拉新用户数,'当月拉新复购率':nat.当月拉新复购率};
+    const natMap={'业绩完成率':nat.业绩完成率,'拉新完成率':nat.拉新完成率,'复购完成率':nat.复购完成率,'退款率':nat.退款率,'店均拉新':nat.店均拉新,'复购率':nat.复购率,'上课率':nat.上课率,'体验课下单转化率':nat.体验课下单转化率,'消课转化率':nat.消课转化率,'拉新客单价':nat.拉新客单价,'人力成本占比':nat.人力成本占比,'教练比':nat.教练比,'店均净收入':nat.店均净收入,'复购店均净收入':nat.复购店均净收入,'拉新店均净收入':nat.拉新店均净收入,'盘点率_30':nat.盘点率_30,'预估复购率_30':nat.预估复购率_30,'咬合度_30':nat.咬合度_30,'盘点率_90':nat.盘点率_90,'预估复购率_90':nat.预估复购率_90,'咬合度_90':nat.咬合度_90,'复购目标占比':nat.复购目标占比,'当月拉新用户数':nat.当月拉新用户数,'当月拉新复购率':nat.当月拉新复购率,'店均体验课':nat.店均体验课};
     if(natMap[col.key]!==undefined){html+=`<td${hideStyle}>${(col.prefix||'')+natMap[col.key]+(col.suffix||'')}</td>`;return;}
     const vals=items.map(c=>c[col.key]).filter(v=>typeof v==='number');
     const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—';

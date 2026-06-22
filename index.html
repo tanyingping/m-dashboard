@@ -417,7 +417,35 @@ function toggleSort(key){if(sortKey===key){sortDir=sortDir==='asc'?'desc':'asc';
 function toggleMgrSort(key){if(mgrSortKey===key){mgrSortDir=mgrSortDir==='asc'?'desc':'asc';}else{mgrSortKey=key;mgrSortDir='desc';}renderManager();}
 function toggleStoreSort(key){if(storeSortKey===key){storeSortDir=storeSortDir==='asc'?'desc':'asc';}else{storeSortKey=key;storeSortDir='desc';}renderStores();}
 
-function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getValFn) {
+const collapsedCats = {ov:new Set(), mgr:new Set(), store:new Set()};
+function toggleCat(tabId, catName) {
+  const s = collapsedCats[tabId];
+  s.has(catName) ? s.delete(catName) : s.add(catName);
+  const table = document.querySelector('#'+(tabId==='ov'?'ovContent':tabId==='mgr'?'mgrContent':'storeTableArea')+' table');
+  if(!table) return;
+  const idxs = [];
+  table.querySelectorAll('thead tr:first-child th').forEach(th => {
+    if(th.dataset.cat===catName) {
+      const ci = parseInt(th.dataset.catstart);
+      const span = parseInt(th.dataset.catspan);
+      for(let i=ci;i<ci+span;i++) idxs.push(i);
+    }
+  });
+  const isHidden = s.has(catName);
+  table.querySelectorAll('tr').forEach(tr => {
+    const cells = tr.children;
+    idxs.forEach(i => { if(cells[i]) cells[i].style.display = isHidden?'none':''; });
+  });
+  // Update header arrow
+  table.querySelectorAll('thead tr:first-child th').forEach(th => {
+    if(th.dataset.cat===catName) {
+      const arrow = th.querySelector('.cat-arrow');
+      if(arrow) arrow.textContent = isHidden ? '▶' : '▼';
+    }
+  });
+}
+
+function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getValFn, tabId) {
   function sortIcon(key,sortable){
     if(sortable===false)return'';
     if(sk===key)return sd==='asc'?'<span class="sort-icon asc">▲</span>':'<span class="sort-icon desc">▼</span>';
@@ -432,57 +460,80 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
       return sd==='asc'?(va-vb):(vb-va);
     });
   }
+  // Build column→category mapping
+  const colCatIdx = [];
+  let colIdx = 0;
+  const catInfo = []; // {name, startIdx, span, hasLabel}
+  categories.forEach(cat => {
+    const info = {name:cat.label||'', startIdx:colIdx, span:cat.span, hasLabel:!!cat.label, color:cat.color||''};
+    catInfo.push(info);
+    for(let i=0;i<cat.span;i++) colCatIdx.push(info);
+    colIdx += cat.span;
+  });
+  const collapsed = (tabId && collapsedCats[tabId]) ? collapsedCats[tabId] : new Set();
   let html='<div class="table-wrap"><table class="data-table"><thead><tr>';
-  categories.forEach(cat=>{
-    if(cat.label){
-      html+=`<th colspan="${cat.span}" class="cat-header" style="background:${cat.color};border-bottom:1px solid rgba(255,255,255,.2);font-size:13px;letter-spacing:1px;text-align:center">${cat.label}</th>`;
+  catInfo.forEach(ci => {
+    const isCollapsed = collapsed.has(ci.name);
+    if(ci.hasLabel){
+      html+=`<th colspan="${ci.span}" class="cat-header" data-cat="${ci.name}" data-catstart="${ci.startIdx}" data-catspan="${ci.span}" onclick="toggleCat('${tabId}','${ci.name}')" style="background:${ci.color};border-bottom:1px solid rgba(255,255,255,.2);font-size:13px;letter-spacing:1px;text-align:center;cursor:pointer;user-select:none"><span class="cat-arrow" style="font-size:10px;margin-right:4px">${isCollapsed?'▶':'▼'}</span>${ci.name}</th>`;
     }else{
-      html+=`<th colspan="${cat.span}" class="no-sort" style="background:#1a237e"></th>`;
+      html+=`<th colspan="${ci.span}" class="no-sort" style="background:#1a237e"></th>`;
     }
   });
   html+='</tr><tr>';
-  cols.forEach(col=>{
+  cols.forEach((col,i)=>{
+    const ci = colCatIdx[i];
+    const isCollapsed = ci && collapsed.has(ci.name);
+    const hideStyle = isCollapsed ? ' style="display:none"' : '';
+    const catAttr = ci ? ` data-cat="${ci.name}"` : '';
     const icon=sortIcon(col.key,col.sortable);
     const cls=col.sortable===false?' class="no-sort"':'';
     const onclick=col.sortable!==false?` onclick="${toggleFn}('${col.key}')"`:''
-    html+=`<th${cls}${onclick}>${col.label}${icon}</th>`;
+    html+=`<th${cls}${onclick}${catAttr}${hideStyle}>${col.label}${icon}</th>`;
   });
   // Avg row in thead (sticky)
   html+='</tr><tr class="avg-row">';
-  html+='<td class="city-col" style="position:sticky;left:0;z-index:5;background:#bbdefb;font-weight:700;color:#0d47a1;min-width:70px;border-bottom:2px solid #1565c0">全国均值</td>';
-  cols.slice(1).forEach(col=>{
-    if(['labels','cities','store','manager','city'].includes(col.key)){html+='<td></td>';return;}
-    if(col.key==='store_count'){html+=`<td>${totalStores}</td>`;return;}
-    if(col.key==='复购客单价'){html+=`<td>${nat.复购客单价!=null?'¥'+nat.复购客单价:'-'}</td>`;return;}
-    if(col.key==='盘点金额_30'){html+=`<td>${(nat.盘点金额_30/10000).toFixed(1)}万</td>`;return;}
-    if(col.key==='盘点金额_90'){html+=`<td>${(nat.盘点金额_90/10000).toFixed(1)}万</td>`;return;}
-    if(col.key==='店均体验课'){const to=items.reduce((s,c)=>s+(c.体验课订单数||0),0);html+=`<td>${(to/totalStores).toFixed(1)}单</td>`;return;}
+  const firstCatInfo = colCatIdx[0];
+  const firstHidden = firstCatInfo && collapsed.has(firstCatInfo.name);
+  html+=`<td class="city-col" style="position:sticky;left:0;z-index:5;background:#bbdefb;font-weight:700;color:#0d47a1;min-width:70px;border-bottom:2px solid #1565c0${firstHidden?';display:none':''}">全国均值</td>`;
+  cols.slice(1).forEach((col,i)=>{
+    const ci = colCatIdx[i+1];
+    const isCollapsed = ci && collapsed.has(ci.name);
+    const hideStyle = isCollapsed ? ' style="display:none"' : '';
+    if(['labels','cities','store','manager','city'].includes(col.key)){html+=`<td${hideStyle}></td>`;return;}
+    if(col.key==='store_count'){html+=`<td${hideStyle}>${totalStores}</td>`;return;}
+    if(col.key==='复购客单价'){html+=`<td${hideStyle}>${nat.复购客单价!=null?'¥'+nat.复购客单价:'-'}</td>`;return;}
+    if(col.key==='盘点金额_30'){html+=`<td${hideStyle}>${(nat.盘点金额_30/10000).toFixed(1)}万</td>`;return;}
+    if(col.key==='盘点金额_90'){html+=`<td${hideStyle}>${(nat.盘点金额_90/10000).toFixed(1)}万</td>`;return;}
+    if(col.key==='店均体验课'){const to=items.reduce((s,c)=>s+(c.体验课订单数||0),0);html+=`<td${hideStyle}>${(to/totalStores).toFixed(1)}单</td>`;return;}
     const natMap={'业绩完成率':nat.业绩完成率,'拉新完成率':nat.拉新完成率,'复购完成率':nat.复购完成率,'退款率':nat.退款率,'店均拉新':nat.店均拉新,'复购率':nat.复购率,'上课率':nat.上课率,'体验课下单转化率':nat.体验课下单转化率,'消课转化率':nat.消课转化率,'拉新客单价':nat.拉新客单价,'人力成本占比':nat.人力成本占比,'教练比':nat.教练比,'店均净收入':nat.店均净收入,'复购店均净收入':nat.复购店均净收入,'拉新店均净收入':nat.拉新店均净收入,'盘点率_30':nat.盘点率_30,'预估复购率_30':nat.预估复购率_30,'咬合度_30':nat.咬合度_30,'盘点率_90':nat.盘点率_90,'预估复购率_90':nat.预估复购率_90,'咬合度_90':nat.咬合度_90,'复购目标占比':nat.复购目标占比,'当月拉新用户数':nat.当月拉新用户数,'当月拉新复购率':nat.当月拉新复购率};
-    if(natMap[col.key]!==undefined){html+=`<td>${(col.prefix||'')+natMap[col.key]+(col.suffix||'')}</td>`;return;}
+    if(natMap[col.key]!==undefined){html+=`<td${hideStyle}>${(col.prefix||'')+natMap[col.key]+(col.suffix||'')}</td>`;return;}
     const vals=items.map(c=>c[col.key]).filter(v=>typeof v==='number');
     const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—';
-    html+=`<td>${(col.prefix||'')+avg+(col.suffix||'')}</td>`;
+    html+=`<td${hideStyle}>${(col.prefix||'')+avg+(col.suffix||'')}</td>`;
   });
   html+='</tr></thead><tbody>';
   sorted.forEach(item=>{
-    const oc = '';
-    html+=`<tr onclick="${oc}" class="">`;
-    cols.forEach(col=>{
+    html+=`<tr>`;
+    cols.forEach((col,i)=>{
+      const ci = colCatIdx[i];
+      const isCollapsed = ci && collapsed.has(ci.name);
+      const hideStyle = isCollapsed ? ' style="display:none"' : '';
       if(col.render){
         const cls=(col.key==='city'||col.key==='manager'||col.key==='store')?'city-col':(col.key==='labels'?'text-col':'');
-        html+=`<td class="${cls}">${col.render(item)}</td>`;
+        html+=`<td class="${cls}"${hideStyle}>${col.render(item)}</td>`;
         return;
       }
       const v=item[col.key];
       let cls='';
-      if(v==null){html+=`<td><span style="color:#999">-</span></td>`;return;}
+      if(v==null){html+=`<td${hideStyle}><span style="color:#999">-</span></td>`;return;}
       if(col.bench!==undefined){
         if(col.isCost){cls=v>col.bench?'cell-warn':'cell-good';}
         else if(col.lower){cls=v>=col.bench?'cell-good':v<col.bench*0.7?'cell-bad':'cell-warn';}
         else{cls=v<=col.bench?'cell-good':v>col.bench+10?'cell-bad':'cell-warn';}
       }
       const display=(col.prefix||'')+v+(col.suffix||'');
-      html+=`<td class="${cls}">${display}</td>`;
+      html+=`<td class="${cls}"${hideStyle}>${display}</td>`;
     });
     html+='</tr>';
   });
@@ -607,7 +658,7 @@ function renderOverview(){
   nat = data.national;
   buildFilterBar('ovFilterBar', ovFilter, renderOverview, renderOverview);
   nat = data.national;
-  document.getElementById('ovContent').innerHTML = buildTable(data.cities, cityCols, cityCats, sortKey, sortDir, 'toggleSort', data.total_stores, gv);
+  document.getElementById('ovContent').innerHTML = buildTable(data.cities, cityCols, cityCats, sortKey, sortDir, 'toggleSort', data.total_stores, gv, 'ov');
   document.getElementById('overviewPanel').className = 'fade-in';
 }
 function renderManager(){
@@ -615,7 +666,7 @@ function renderManager(){
   nat = data.national;
   buildFilterBar('mgrFilterBar', mgrFilter, renderManager, renderManager);
   nat = data.national;
-  document.getElementById('mgrContent').innerHTML = buildTable(data.managers, mgrCols, mgrCats, mgrSortKey, mgrSortDir, 'toggleMgrSort', data.total_stores, gv);
+  document.getElementById('mgrContent').innerHTML = buildTable(data.managers, mgrCols, mgrCats, mgrSortKey, mgrSortDir, 'toggleMgrSort', data.total_stores, gv, 'mgr');
   document.getElementById('managerPanel').className = 'fade-in';
 }
 
@@ -656,7 +707,7 @@ function renderStores(){
   });
   const tableArea=document.getElementById('storeTableArea');
   const info='<div style="font-size:13px;color:#5f6368;margin-bottom:8px">共 '+filtered.length+' 家门店'+(fc!=='全部'?' | '+fc:'')+(fm!=='全部'?' | 区经:'+fm:'')+(fl!=='全部'?' | 标签:'+fl:'')+'</div>';
-  tableArea.innerHTML=info+buildTable(filtered,storeCols,storeCats,storeSortKey,storeSortDir,'toggleStoreSort',data.total_stores,gv);
+  tableArea.innerHTML=info+buildTable(filtered,storeCols,storeCats,storeSortKey,storeSortDir,'toggleStoreSort',data.total_stores,gv,'store');
   document.getElementById('storesPanel').className='fade-in';
 }
 

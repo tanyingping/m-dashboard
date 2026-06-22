@@ -356,7 +356,6 @@ function buildFilterBar(containerId, filter, onTypeChange, onStatusChange) {
       const boxes = ms.querySelectorAll('input[name=item]');
       const newSet = new Set();
       boxes.forEach(b => { if(b.checked) newSet.add(b.value); });
-      if (newSet.size === 0) { boxes.forEach(b => { b.checked = true; newSet.add(b.value); }); }
       // Update "全选" checkbox state
       ms.querySelectorAll('input[name=all]').forEach(cb => { cb.checked = newSet.size === (isType?ALL_TYPES:ALL_STATUSES).length; });
       // Update display text

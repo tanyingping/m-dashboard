@@ -895,7 +895,7 @@ function renderIncentive() {
 
   // Rank within each group (on full data, before filtering)
   ['A','B','C'].forEach(g => {
-    const groupStores = data.filter(s => s.group === g).sort((a,b) => b.ns - a.ns);
+    const groupStores = data.filter(s => s.group === g).sort((a,b) => b.cr - a.cr);
     groupStores.forEach((s, i) => { s.rank = i + 1; s.groupSize = groupStores.length; });
   });
 

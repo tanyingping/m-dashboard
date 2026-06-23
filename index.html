@@ -1098,8 +1098,8 @@ function renderLxRace() {
   const data = INC_STORES.map(s => ({
     ...s,
     lxRaw: s.lx,
-    lxEff: s.t === 'FM包月馆' ? Math.floor(s.lx / 2) : s.lx,
-    baseline: (s.t === 'FM包月馆' ? Math.floor(s.lx / 2) : s.lx) >= 10
+    lxEff: s.t === 'FM包月馆' ? Math.floor(s.lx * 0.8) : s.lx,
+    baseline: (s.t === 'FM包月馆' ? Math.floor(s.lx * 0.8) : s.lx) >= 10
   }));
 
   // Assign zone and rank within each zone
@@ -1204,7 +1204,7 @@ function renderLxRace() {
       html += '</tr>';
     });
     html += '</table>';
-    html += '<div style="font-size:11px;color:#999;margin-top:6px">底线要求：计入排名的拉新数 ≥ 10人。FM包月馆计入排名 = 真实拉新÷2，FM私教馆不除。预估奖励仅按排名计算，实际发放需达成底线。</div>';
+    html += '<div style="font-size:11px;color:#999;margin-top:6px">底线要求：计入排名的拉新数 ≥ 10人。FM包月馆计入排名 = 真实拉新×0.8，FM私教馆不变。预估奖励仅按排名计算，实际发放需达成底线。</div>';
   }
   html += '</div>';
 
@@ -1244,7 +1244,7 @@ function renderLxRace() {
         html += '<td style="font-weight:600">' + s.lxRaw + '</td>';
       } else if (col.key === 'lxEff') {
         const color = s.lxEff >= 10 ? '#34a853' : '#ea4335';
-        html += '<td style="font-weight:700;color:' + color + '">' + s.lxEff + (s.t==='FM包月馆'?'<span style="font-size:10px;color:#999"> (÷2)</span>':'') + '</td>';
+        html += '<td style="font-weight:700;color:' + color + '">' + s.lxEff + (s.t==='FM包月馆'?'<span style="font-size:10px;color:#999"> (×0.8)</span>':'') + '</td>';
       } else if (col.key === 'baseline') {
         if (s.baseline) {
           html += '<td style="color:#34a853;font-weight:700">已达成</td>';

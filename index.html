@@ -838,11 +838,13 @@ const REGION_PK = {"杭宁赛区":{"pt":8873838.0,"ns":1007260.53,"cr":11.4,"cit
 const GROUPS_PK = [{"label":"第1组","regions":["京津冀赛区","杭宁赛区"],"prize":6000},{"label":"第2组","regions":["沪苏锡赛区","深圳赛区"],"prize":6000},{"label":"第3组","regions":["武汉赛区","南京赛区"],"prize":4000},{"label":"第4组","regions":["川渝赛区","广州赛区","郑州赛区"],"prize":4000}];
 
 function renderRegionPK() {
-  const panel = document.getElementById('regionPKPanel');
-  let h = '<div style="padding:16px 20px">';
-  h += '<div style="text-align:center;margin-bottom:20px">';
-  h += '<h2 style="font-size:20px;color:#1a1a1a;margin-bottom:4px">🏆 赛区1V1PK</h2>';
-  h += '<div style="font-size:13px;color:#666">赛马时间：7.1–7.31 ｜ 底线要求：净收入预算达成率≥80% ｜ 发放方式：走团建经费报销 ｜ 总奖金池：¥20,000</div>';
+  var panel = document.getElementById('regionPKPanel');
+  var h = '<div style="padding:20px">';
+  // Header
+  h += '<div style="text-align:center;margin-bottom:24px">';
+  h += '<h2 style="font-size:24px;color:#1a1a1a;margin-bottom:6px;font-weight:700">🏆 赛区1V1PK</h2>';
+  h += '<div style="font-size:14px;color:#666;line-height:1.8">赛马时间：7.1–7.31 ｜ PK指标：赛区整体净收入完成率<br>';
+  h += '底线要求：净收入预算达成率≥80% ｜ 发放方式：走团建经费报销 ｜ 总奖金池：<b>¥20,000</b></div>';
   h += '</div>';
 
   GROUPS_PK.forEach(function(g) {
@@ -852,66 +854,89 @@ function renderRegionPK() {
     });
     var maxCR = Math.max.apply(null, regs.map(function(r){return r.cr;}));
     var winners = regs.filter(function(r){return r.cr === maxCR;}).map(function(r){return r.name;});
+    var hasClearWinner = winners.length === 1;
 
-    h += '<div style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:16px;overflow:hidden">';
-    h += '<div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">';
-    h += '<span style="font-size:15px;font-weight:600">' + g.label + '</span>';
-    h += '<span style="font-size:13px;background:rgba(255,255,255,.2);padding:2px 10px;border-radius:10px">🏅 奖金 ¥' + g.prize + '</span>';
+    // Card container
+    h += '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.1);margin-bottom:20px;overflow:hidden">';
+
+    // Group header bar
+    h += '<div style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center">';
+    h += '<span style="font-size:17px;font-weight:700">' + g.label + '</span>';
+    h += '<span style="font-size:15px;font-weight:600;background:rgba(255,255,255,.25);padding:3px 14px;border-radius:20px">🏅 奖金 ¥' + g.prize + '</span>';
     h += '</div>';
 
-    h += '<div style="display:flex;align-items:stretch;flex-wrap:wrap">';
+    // Battle area
+    h += '<div style="display:flex;align-items:stretch;padding:16px;gap:0">';
+
     regs.forEach(function(r, idx) {
-      var isWinner = r.cr === maxCR && winners.length === 1;
+      var isWinner = hasClearWinner && r.cr === maxCR;
+      var isLoser = hasClearWinner && r.cr !== maxCR;
+
+      // Region card styling
+      var borderColor = isWinner ? '#16a34a' : isLoser ? '#d1d5db' : '#e5e7eb';
+      var bgColor = isWinner ? '#f0fdf4' : isLoser ? '#f9fafb' : '#fff';
+      var opacity = isLoser ? '0.7' : '1';
+      var crColor = isWinner ? '#16a34a' : isLoser ? '#9ca3af' : '#1a1a1a';
+      var borderWidth = isWinner ? '2px' : '1px';
+
+      h += '<div style="flex:1;padding:16px;border:' + borderWidth + ' solid ' + borderColor + ';border-radius:12px;background:' + bgColor + ';opacity:' + opacity + '">';
+
+      // Name + badge
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
+      if (isWinner) h += '<span style="font-size:24px">👑</span>';
+      h += '<span style="font-size:18px;font-weight:700;color:' + (isWinner ? '#16a34a' : '#1a1a1a') + '">' + r.name + '</span>';
+      if (isWinner) h += '<span style="font-size:12px;color:#fff;background:#16a34a;padding:2px 8px;border-radius:6px;font-weight:600">领先</span>';
+      if (isLoser) h += '<span style="font-size:12px;color:#9ca3af;font-weight:500">落后</span>';
+      h += '</div>';
+
+      // Cities label
       var cities = Object.keys(r.cities || {}).map(function(cn){ return {name:cn, pt:r.cities[cn].pt, ns:r.cities[cn].ns, cr:r.cities[cn].cr}; });
+      h += '<div style="font-size:13px;color:#888;margin-bottom:14px">' + cities.map(function(c){return c.name.replace('市','');}).join(' + ') + '</div>';
 
-      h += '<div style="flex:1;min-width:200px;padding:14px 16px;border-right:1px solid #f0f0f0">';
-      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
-      if (isWinner) h += '<span style="font-size:18px">👑</span>';
-      h += '<span style="font-size:15px;font-weight:600;color:#1a1a1a">' + r.name + '</span>';
-      if (isWinner) h += '<span style="font-size:11px;color:#16a34a;font-weight:600;background:#dcfce7;padding:1px 6px;border-radius:4px">领先</span>';
+      // Big completion rate
+      h += '<div style="font-size:32px;font-weight:800;color:' + crColor + ';margin-bottom:12px;line-height:1">' + r.cr + '<span style="font-size:18px">%</span></div>';
+
+      // Target and income
+      h += '<div style="display:flex;gap:16px;margin-bottom:12px">';
+      h += '<div><div style="font-size:12px;color:#999;margin-bottom:2px">目标</div><div style="font-size:15px;font-weight:600;color:#374151">' + (r.pt/10000).toFixed(1) + '<span style="font-size:12px;color:#999">万</span></div></div>';
+      h += '<div><div style="font-size:12px;color:#999;margin-bottom:2px">净收入</div><div style="font-size:15px;font-weight:600;color:' + (isWinner ? '#16a34a' : isLoser ? '#9ca3af' : '#2563eb') + '">' + (r.ns/10000).toFixed(1) + '<span style="font-size:12px;color:#999">万</span></div></div>';
       h += '</div>';
 
-      h += '<div style="font-size:12px;color:#888;margin-bottom:6px">' + cities.map(function(c){return c.name.replace('市','');}).join(' + ') + '</div>';
-
-      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13px;margin-bottom:10px">';
-      h += '<div><span style="color:#999">目标</span></div><div style="text-align:right;font-weight:500">' + (r.pt/10000).toFixed(1) + '万</div>';
-      h += '<div><span style="color:#999">净收入</span></div><div style="text-align:right;font-weight:500;color:#2563eb">' + (r.ns/10000).toFixed(1) + '万</div>';
-      h += '<div><span style="color:#999">完成率</span></div><div style="text-align:right;font-weight:700;font-size:16px;color:' + (r.cr>=80?'#16a34a':r.cr>=40?'#d97706':'#dc2626') + '">' + r.cr + '%</div>';
-      h += '</div>';
-
-      var prog = Math.min(r.cr / 80 * 100, 100);
-      var progColor = r.cr >= 80 ? '#16a34a' : r.cr >= 40 ? '#f59e0b' : '#ef4444';
-      h += '<div style="margin-bottom:4px;display:flex;justify-content:space-between;font-size:11px;color:#888">';
-      h += '<span>底线80%进度</span><span>' + Math.min(r.cr/80*100,100).toFixed(1) + '%</span></div>';
-      h += '<div style="height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden">';
-      h += '<div style="height:100%;width:' + prog + '%;background:' + progColor + ';border-radius:4px;transition:width .5s"></div>';
-      h += '</div>';
-
+      // City breakdown
       if (cities.length > 1) {
-        h += '<div style="margin-top:8px;border-top:1px dashed #e5e7eb;padding-top:6px">';
+        h += '<div style="border-top:1px dashed #e5e7eb;padding-top:8px;margin-top:4px">';
         cities.forEach(function(cd) {
-          h += '<div style="display:flex;justify-content:space-between;font-size:11px;color:#666;padding:1px 0">';
-          h += '<span>' + cd.name.replace('市','') + '</span><span>' + cd.cr + '% (' + (cd.ns/10000).toFixed(1) + '万)</span></div>';
+          var cityCrColor = cd.cr >= 80 ? '#16a34a' : '#666';
+          h += '<div style="display:flex;justify-content:space-between;font-size:12px;color:#666;padding:2px 0">';
+          h += '<span>' + cd.name.replace('市','') + '</span>';
+          h += '<span style="font-weight:600;color:' + cityCrColor + '">' + cd.cr + '% <span style="font-weight:400;color:#aaa">(' + (cd.ns/10000).toFixed(1) + '万)</span></span></div>';
         });
         h += '</div>';
       }
 
       h += '</div>';
+
+      // VS divider between regions
       if (idx < regs.length - 1) {
-        h += '<div style="display:flex;align-items:center;justify-content:center;padding:0 4px;font-size:20px;font-weight:800;color:#cbd5e1">VS</div>';
+        h += '<div style="display:flex;align-items:center;justify-content:center;padding:0 12px">';
+        h += '<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3)">VS</div>';
+        h += '</div>';
       }
     });
+
     h += '</div>';
 
-    if (winners.length === 1) {
-      h += '<div style="text-align:center;padding:8px;background:#f0fdf4;font-size:13px;color:#16a34a;font-weight:500">';
-      h += '🎉 ' + winners[0] + ' 暂时领先，预估奖励 ¥' + g.prize;
+    // Result footer
+    if (hasClearWinner) {
+      h += '<div style="text-align:center;padding:12px 16px;background:linear-gradient(135deg,#dcfce7,#f0fdf4);font-size:15px;color:#16a34a;font-weight:600;border-top:1px solid #bbf7d0">';
+      h += '🎉 ' + winners[0] + ' 暂时领先 · 预估奖励 ¥' + g.prize;
       h += '</div>';
     } else {
-      h += '<div style="text-align:center;padding:8px;background:#fefce8;font-size:13px;color:#a16207;font-weight:500">';
+      h += '<div style="text-align:center;padding:12px 16px;background:#fefce8;font-size:15px;color:#a16207;font-weight:600;border-top:1px solid #fde68a">';
       h += '⚡ 暂时并列，竞争激烈！';
       h += '</div>';
     }
+
     h += '</div>';
   });
 

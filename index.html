@@ -1127,8 +1127,18 @@ var EXCLUDED_MGRS=new Set(["左明晖","李奔","金慧昕","李崇义",null,"�
 
 function switchDailyView(mode){
   dailyViewMode=mode;
-  document.getElementById('dailyCityBtn').className='daily-toggle-btn'+(mode==='city'?' active':'');
-  document.getElementById('dailyMgrBtn').className='daily-toggle-btn'+(mode==='mgr'?' active':'');
+  var cityBtn=document.getElementById('dailyCityBtn');
+  var mgrBtn=document.getElementById('dailyMgrBtn');
+  if(cityBtn){
+    cityBtn.style.background=mode==='city'?'#3b82f6':'transparent';
+    cityBtn.style.color=mode==='city'?'#fff':'#64748b';
+    cityBtn.style.boxShadow=mode==='city'?'0 2px 8px rgba(59,130,246,.3)':'none';
+  }
+  if(mgrBtn){
+    mgrBtn.style.background=mode==='mgr'?'#3b82f6':'transparent';
+    mgrBtn.style.color=mode==='mgr'?'#fff':'#64748b';
+    mgrBtn.style.boxShadow=mode==='mgr'?'0 2px 8px rgba(59,130,246,.3)':'none';
+  }
   renderDailyCombined();
 }
 function toggleDailySort(type,key){
@@ -1142,20 +1152,26 @@ function renderDailyCombined(){
   if(!panel)return;
   if(dates.length<2){panel.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8"><div style="font-size:48px;margin-bottom:16px">📊</div><div style="font-size:16px">历史数据不足2天，无法对比</div><div style="font-size:13px;margin-top:8px">每天更新看板后会自动积累历史数据</div></div>';return;}
   var d1=dates[dates.length-2],d2=dates[dates.length-1];
-  function dateLabel(d){if(d.length===4){var m=parseInt(d.substr(0,2)),dd=parseInt(d.substr(2,2));return m+'月'+dd+'日';}return parseInt(d)+'日';}
+  function dateLabel(d){
+    var m,dd;
+    if(d.length===4){m=parseInt(d.substr(0,2));dd=parseInt(d.substr(2,2));}
+    else{m=7;dd=parseInt(d);}
+    dd-=1;if(dd<=0){m-=1;dd=30;}
+    if(d.length===4)return m+'月'+dd+'日';return dd+'日';
+  }
   var label1=dateLabel(d1),label2=dateLabel(d2);
 
   var h='';
-  // Header
+  // Top toggle - large and prominent
   h+='<div style="padding:20px 20px 0 20px">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">';
-  h+='<div><div style="font-size:18px;font-weight:700;color:#1e293b">日增对比</div>';
-  h+='<div style="font-size:13px;color:#94a3b8;margin-top:4px">'+label1+' → '+label2+'</div></div>';
-  // Toggle buttons
-  h+='<div style="display:inline-flex;background:#f1f5f9;border-radius:10px;padding:3px;gap:2px">';
-  h+='<button id="dailyCityBtn" class="daily-toggle-btn'+(dailyViewMode==='city'?' active':'')+'" onclick="switchDailyView(\'city\')" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:'+(dailyViewMode==='city'?'#fff':'transparent')+';color:'+(dailyViewMode==='city'?'#3b82f6':'#64748b')+';box-shadow:'+(dailyViewMode==='city'?'0 1px 3px rgba(0,0,0,.1)':'none')+'">城市</button>';
-  h+='<button id="dailyMgrBtn" class="daily-toggle-btn'+(dailyViewMode==='mgr'?' active':'')+'" onclick="switchDailyView(\'mgr\')" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:'+(dailyViewMode==='mgr'?'#fff':'transparent')+';color:'+(dailyViewMode==='mgr'?'#3b82f6':'#64748b')+';box-shadow:'+(dailyViewMode==='mgr'?'0 1px 3px rgba(0,0,0,.1)':'none')+'">区域经理</button>';
+  h+='<div style="display:flex;justify-content:center;margin-bottom:16px">';
+  h+='<div style="display:inline-flex;background:#f1f5f9;border-radius:12px;padding:4px;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,.08)">';
+  h+='<button id="dailyCityBtn" onclick="switchDailyView(\'city\')" style="padding:12px 36px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;background:'+(dailyViewMode==='city'?'#3b82f6':'transparent')+';color:'+(dailyViewMode==='city'?'#fff':'#64748b')+';box-shadow:'+(dailyViewMode==='city'?'0 2px 8px rgba(59,130,246,.3)':'none')+'">城市</button>';
+  h+='<button id="dailyMgrBtn" onclick="switchDailyView(\'mgr\')" style="padding:12px 36px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;background:'+(dailyViewMode==='mgr'?'#3b82f6':'transparent')+';color:'+(dailyViewMode==='mgr'?'#fff':'#64748b')+';box-shadow:'+(dailyViewMode==='mgr'?'0 2px 8px rgba(59,130,246,.3)':'none')+'">区域经理</button>';
   h+='</div></div>';
+  // Date subtitle
+  h+='<div style="text-align:center;margin-bottom:16px">';
+  h+='<div style="font-size:14px;color:#94a3b8;font-weight:500">'+label1+' → '+label2+' 业绩对比</div></div>';
 
   if(dailyViewMode==='city'){
     h+=renderDailyCityTable(d1,d2,label1,label2);

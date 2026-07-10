@@ -154,6 +154,9 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
       <button class="tab-btn" data-tab="stores" onclick="switchTab('stores')">门店明细</button>
       <button class="tab-btn" data-tab="regionpk" onclick="switchTab('regionpk')">赛区1V1PK</button>
       <button class="tab-btn" data-tab="dqz" onclick="switchTab('dqz')">大区总对比</button>
+
+      <button class="tab-btn" data-tab="citydaily" onclick="switchTab('citydaily')">城市日增对比</button>
+      <button class="tab-btn" data-tab="mgrdaily" onclick="switchTab('mgrdaily')">区经日增对比</button>
     </div>
     <div id="overviewPanel" class="fade-in"><div id="ovFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="ovContent"></div></div>
     <div id="managerPanel" class="detail"><div id="mgrFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="mgrContent"></div></div>
@@ -171,6 +174,13 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
     </div>
     <div id="detailPanel" class="detail"><div id="dtlFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="dtlContent"></div></div>
     <div id="regionPKPanel" class="detail"></div>
+    
+    <div id="cityDailyPanel" class="detail" style="display:none">
+      <div id="cityDailyContent"></div>
+    </div>
+    <div id="mgrDailyPanel" class="detail" style="display:none">
+      <div id="mgrDailyContent"></div>
+    </div>
     <div id="dqzPanel" class="detail"><div id="dqzFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="dqzContent"></div></div>
   </div>
 </div>
@@ -426,11 +436,15 @@ function switchTab(tab){
   document.getElementById('storesPanel').style.display=tab==='stores'?'block':'none';
   document.getElementById('regionPKPanel').style.display=tab==='regionpk'?'block':'none';
   document.getElementById('dqzPanel').style.display=tab==='dqz'?'block':'none';
+  document.getElementById('cityDailyPanel').style.display=tab==='citydaily'?'block':'none';
+  document.getElementById('mgrDailyPanel').style.display=tab==='mgrdaily'?'block':'none';
   if(tab==='overview')renderOverview();
   if(tab==='manager')renderManager();
   if(tab==='stores'){initStoreFilters();renderStores();}
   if(tab==='regionpk')renderRegionPK();
   if(tab==='dqz')renderDqz();
+  if(tab==='citydaily')renderCityDaily();
+  if(tab==='mgrdaily')renderMgrDaily();
 }
 
 function toggleSort(key){if(sortKey===key){sortDir=sortDir==='asc'?'desc':'asc';}else{sortKey=key;sortDir='desc';}renderOverview();}
@@ -1104,6 +1118,295 @@ function renderDqz(){
 
   document.getElementById('dqzContent').innerHTML = html;
   document.getElementById('dqzPanel').className = 'fade-in';
+}
+
+
+const HISTORY_PK = {"10":{"c":{"杭州市":[1087.38,182.55,103],"深圳市":[658.83,133.04,60],"广州市":[331.57,42.35,27],"北京市":[1034.63,156.44,76],"上海市":[682.66,144.02,55],"宁波市":[47.16,7.8,6],"苏州市":[163.03,32.35,16],"武汉市":[348.59,69.8,35],"无锡市":[15.0,3.08,1],"成都市":[153.0,30.92,16],"天津市":[77.81,11.27,8],"合肥市":[50.0,14.77,5],"南京市":[332.93,40.26,41],"重庆市":[37.0,11.64,4],"长沙市":[114.5,28.75,10],"郑州市":[90.0,25.48,10],"西安市":[52.3,10.84,7],"济南市":[13.0,0.75,2],"青岛市":[5.0,2.33,2]},"m":{"黄欣":[329.3,59.97,28],"王亚蝶":[340.28,77.89,28],"袁铭阳":[292.77,49.65,24],"高泽中":[331.57,42.35,27],"吴印涛":[540.0,87.68,37],"孙淑鑫":[313.22,48.67,29],"邝毅凯":[297.56,55.15,30],"肖家强":[217.25,26.77,17],"王晓努":[191.16,19.5,21],"赵晨光":[474.63,64.83,38],"孙仁杰":[266.73,70.6,23],"夏小童":[151.54,19.23,11],"吴子恒":[178.03,35.43,16],"丁凡":[326.6,58.16,33],"伍倩悦":[72.81,10.73,7],"胡计者":[50.0,14.77,5],"童习成":[186.52,19.88,20],"纵文雅":[128.8,19.07,15],"石敏":[175.0,31.46,19],"刘峥":[102.5,27.13,9],"孙艺畅":[82.0,17.71,8],"李嘉":[52.3,10.83,6],"(null)":[5.0,2.33,4]}},"09":{"c":{"杭州市":[1087.38,172.39,102],"深圳市":[658.83,123.5,60],"广州市":[331.57,36.72,27],"北京市":[1034.63,137.36,76],"上海市":[682.66,123.52,55],"宁波市":[47.16,6.29,6],"苏州市":[163.03,28.96,16],"武汉市":[348.59,60.19,35],"无锡市":[15.0,2.81,1],"成都市":[153.0,30.16,16],"天津市":[77.81,9.99,8],"合肥市":[50.0,12.33,5],"南京市":[332.93,36.59,41],"重庆市":[37.0,10.4,4],"长沙市":[114.5,25.12,10],"郑州市":[90.0,23.33,10],"西安市":[52.3,10.5,7],"济南市":[13.0,0.73,2],"青岛市":[5.0,2.32,2]},"m":{"黄欣":[329.3,55.73,28],"王亚蝶":[340.28,72.32,28],"袁铭阳":[292.77,45.88,24],"高泽中":[331.57,36.72,27],"吴印涛":[540.0,78.65,37],"孙淑鑫":[313.22,49.15,29],"邝毅凯":[297.56,51.19,30],"肖家强":[217.25,24.73,17],"王晓努":[191.16,17.7,21],"赵晨光":[474.63,55.32,38],"孙仁杰":[266.73,57.02,23],"夏小童":[151.54,17.74,11],"吴子恒":[178.03,31.77,16],"丁凡":[326.6,49.02,33],"伍倩悦":[72.81,9.45,7],"胡计者":[50.0,12.33,5],"童习成":[186.52,18.23,20],"纵文雅":[128.8,17.11,15],"石敏":[169.5,25.28,18],"刘峥":[102.5,23.64,9],"孙艺畅":[82.0,16.09,8],"李嘉":[52.3,10.49,6],"(null)":[5.0,2.32,4]}},"08":{"c":{"杭州市":[1087.38,119.54,102],"深圳市":[658.83,91.87,60],"广州市":[331.57,30.88,27],"北京市":[1034.63,115.01,76],"上海市":[682.66,108.92,55],"宁波市":[47.16,4.14,6],"苏州市":[163.03,24.84,16],"武汉市":[348.59,49.6,35],"无锡市":[15.0,2.13,1],"成都市":[153.0,24.24,16],"天津市":[77.81,9.1,8],"合肥市":[50.0,9.24,5],"南京市":[332.93,33.5,41],"重庆市":[37.0,8.7,4],"长沙市":[114.5,17.47,10],"郑州市":[90.0,19.77,10],"西安市":[52.3,7.21,7],"济南市":[13.0,0.68,2],"青岛市":[5.0,2.06,2]},"m":{"黄欣":[329.3,41.41,28],"王亚蝶":[340.28,54.72,28],"袁铭阳":[292.77,30.8,24],"高泽中":[331.57,30.88,27],"吴印涛":[540.0,63.59,37],"孙淑鑫":[313.22,33.9,29],"邝毅凯":[297.56,37.15,30],"肖家强":[217.25,21.14,17],"王晓努":[191.16,11.86,21],"赵晨光":[474.63,49.36,38],"孙仁杰":[266.73,49.11,23],"夏小童":[151.54,15.1,11],"吴子恒":[178.03,26.97,16],"丁凡":[326.6,39.97,33],"伍倩悦":[72.81,8.79,7],"胡计者":[50.0,9.24,5],"童习成":[186.52,16.33,20],"纵文雅":[128.8,16.02,15],"石敏":[169.5,19.33,18],"刘峥":[102.5,16.24,9],"孙艺畅":[82.0,14.11,8],"李嘉":[52.3,7.21,6],"(null)":[5.0,2.06,4]}}};
+
+const EXCLUDED_MGRS = new Set(["左明晖","李奔","金慧昕","李崇义",null,"应杰","任博潭","吉博文","言文","郑前前"]);
+var cityDailySort = {key:'t_cr', dir:-1};
+var mgrDailySort = {key:'t_cr', dir:-1};
+var cityDailyFilter = '';
+var mgrDailyFilter = '';
+
+function getHistoryDates() {
+  return Object.keys(HISTORY_PK).sort(function(a,b){return parseInt(a)-parseInt(b);});
+}
+
+function buildDailyTable(type, sortState, filterCity) {
+  var dates = getHistoryDates();
+  if (dates.length < 2) return '<p style="padding:20px;color:#999">历史数据不足2天，无法对比。每天更新看板后会自动积累历史数据。</p>';
+  
+  var d1 = dates[dates.length-2]; // earlier date
+  var d2 = dates[dates.length-1]; // later date
+  
+  var data1 = HISTORY_PK[d1][type]; // {name: [pt, ns, count]}
+  var data2 = HISTORY_PK[d2][type];
+  
+  // Get all names
+  var allNames = {};
+  for (var k in data1) allNames[k] = 1;
+  for (var k in data2) allNames[k] = 1;
+  
+  // Build rows
+  var rows = [];
+  for (var name in allNames) {
+    var v1 = data1[name] || [0,0,0];
+    var v2 = data2[name] || [0,0,0];
+    var pt1=v1[0], ns1=v1[1], cnt1=v1[2];
+    var pt2=v2[0], ns2=v2[1], cnt2=v2[2];
+    var cr1 = pt1>0 ? ns1/pt1*100 : 0;
+    var cr2 = pt2>0 ? ns2/pt2*100 : 0;
+    var nsDiff = ns2 - ns1;
+    var crDiff = cr2 - cr1;
+    
+    // City filter
+    if (type === 'm' && filterCity) {
+      // For mgr table, filter by city - need to check city mapping
+      // We'll handle this differently
+    }
+    
+    rows.push({name:name, count:cnt2, pt1:pt1, cr1:cr1, pt2:pt2, cr2:cr2, crDiff:crDiff, ns1:ns1, ns2:ns2, nsDiff:nsDiff});
+  }
+  
+  // Sort
+  var sk = sortState.key, sd = sortState.dir;
+  rows.sort(function(a,b){
+    var va = a[sk], vb = b[sk];
+    if (typeof va === 'string') return sd * va.localeCompare(vb);
+    return sd * (va - vb);
+  });
+  
+  // City filter for mgr table
+  if (type === 'm' && filterCity) {
+    // Filter managers by their cities - we need city-mgr mapping
+    // For now, show all (city filter applies to city table)
+  }
+  
+  // Build HTML
+  var h = '<div class="table-wrap"><table><thead><tr>';
+  var cols = [
+    {key:'name', label: type==='c'?'城市':'区域经理', w:'120px'},
+    {key:'count', label:'门店', w:'60px'},
+    {key:'pt1', label:d1+'日目标(万)', w:'110px'},
+    {key:'cr1', label:d1+'日完成率', w:'100px'},
+    {key:'pt2', label:d2+'日目标(万)', w:'110px'},
+    {key:'cr2', label:d2+'日完成率', w:'100px'},
+    {key:'crDiff', label:'完成率变化(pp)', w:'120px'},
+    {key:'ns1', label:d1+'日净收入(万)', w:'120px'},
+    {key:'ns2', label:d2+'日净收入(万)', w:'120px'},
+    {key:'nsDiff', label:'净收入净增(万)', w:'120px'}
+  ];
+  for (var i=0;i<cols.length;i++){
+    var c = cols[i];
+    var arrow = '';
+    if (sk === c.key) arrow = sd>0?' ▲':' ▼';
+    h += '<th style="width:'+c.w+';cursor:pointer;white-space:nowrap" onclick="toggleDailySort(\''+type+'\',\''+c.key+'\')">'+c.label+arrow+'</th>';
+  }
+  h += '</tr></thead><tbody>';
+  
+  for (var i=0;i<rows.length;i++){
+    var r = rows[i];
+    var crDiffClass = r.crDiff>0?'color:#16a34a':(r.crDiff<0?'color:#dc2626':'');
+    var nsDiffClass = r.nsDiff>0?'color:#16a34a':(r.nsDiff<0?'color:#dc2626':'');
+    h += '<tr>';
+    h += '<td style="font-weight:600;white-space:nowrap">'+r.name+'</td>';
+    h += '<td style="text-align:center">'+r.count+'</td>';
+    h += '<td style="text-align:right">'+r.pt1.toFixed(2)+'</td>';
+    h += '<td style="text-align:right">'+r.cr1.toFixed(1)+'%</td>';
+    h += '<td style="text-align:right">'+r.pt2.toFixed(2)+'</td>';
+    h += '<td style="text-align:right">'+r.cr2.toFixed(1)+'%</td>';
+    h += '<td style="text-align:right;font-weight:600;'+crDiffClass+'">'+(r.crDiff>=0?'+':'')+r.crDiff.toFixed(1)+'</td>';
+    h += '<td style="text-align:right">'+r.ns1.toFixed(2)+'</td>';
+    h += '<td style="text-align:right">'+r.ns2.toFixed(2)+'</td>';
+    h += '<td style="text-align:right;font-weight:600;'+nsDiffClass+'">'+(r.nsDiff>=0?'+':'')+r.nsDiff.toFixed(2)+'</td>';
+    h += '</tr>';
+  }
+  h += '</tbody></table></div>';
+  return h;
+}
+
+function toggleDailySort(type, key) {
+  if (type === 'c') {
+    if (cityDailySort.key === key) cityDailySort.dir *= -1;
+    else { cityDailySort.key = key; cityDailySort.dir = -1; }
+    renderCityDaily();
+  } else {
+    if (mgrDailySort.key === key) mgrDailySort.dir *= -1;
+    else { mgrDailySort.key = key; mgrDailySort.dir = -1; }
+    renderMgrDaily();
+  }
+}
+
+function renderCityDaily() {
+  var dates = getHistoryDates();
+  var panel = document.getElementById('cityDailyContent');
+  if (!panel) return;
+  
+  // City filter
+  var allCities = [];
+  if (dates.length > 0) {
+    var lastData = HISTORY_PK[dates[dates.length-1]]['c'];
+    allCities = Object.keys(lastData).sort();
+  }
+  
+  var h = '<div style="padding:20px">';
+  h += '<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;align-items:center">';
+  h += '<span style="font-size:15px;font-weight:600">城市日增对比</span>';
+  h += '<select onchange="cityDailyFilter=this.value;renderCityDaily()" style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px">';
+  h += '<option value="">全部城市</option>';
+  for (var i=0;i<allCities.length;i++){
+    var sel = cityDailyFilter===allCities[i]?'selected':'';
+    h += '<option value="'+allCities[i]+'" '+sel+'>'+allCities[i]+'</option>';
+  }
+  h += '</select>';
+  h += '</div>';
+  
+  var tableHtml = buildDailyTable('c', cityDailySort, cityDailyFilter);
+  
+  // Apply city filter to table
+  if (cityDailyFilter && tableHtml.indexOf('<tr>') > 0) {
+    // Rebuild with filter
+    var dates2 = getHistoryDates();
+    var d1 = dates2[dates2.length-2], d2 = dates2[dates2.length-1];
+    var data1 = HISTORY_PK[d1]['c'], data2 = HISTORY_PK[d2]['c'];
+    var allNames = {};
+    for (var k in data1) allNames[k] = 1;
+    for (var k in data2) allNames[k] = 1;
+    var rows = [];
+    for (var name in allNames) {
+      if (cityDailyFilter && name !== cityDailyFilter) continue;
+      var v1 = data1[name]||[0,0,0], v2 = data2[name]||[0,0,0];
+      var cr1=v1[0]>0?v1[1]/v1[0]*100:0, cr2=v2[0]>0?v2[1]/v2[0]*100:0;
+      rows.push({name:name,count:v2[2],pt1:v1[0],cr1:cr1,pt2:v2[0],cr2:cr2,crDiff:cr2-cr1,ns1:v1[1],ns2:v2[1],nsDiff:v2[1]-v1[1]});
+    }
+    var sk=cityDailySort.key, sd=cityDailySort.dir;
+    rows.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return sd*va.localeCompare(vb);return sd*(va-vb);});
+    
+    var cols=[
+      {key:'name',label:'城市',w:'120px'},{key:'count',label:'门店',w:'60px'},
+      {key:'pt1',label:d1+'日目标(万)',w:'110px'},{key:'cr1',label:d1+'日完成率',w:'100px'},
+      {key:'pt2',label:d2+'日目标(万)',w:'110px'},{key:'cr2',label:d2+'日完成率',w:'100px'},
+      {key:'crDiff',label:'完成率变化(pp)',w:'120px'},{key:'ns1',label:d1+'日净收入(万)',w:'120px'},
+      {key:'ns2',label:d2+'日净收入(万)',w:'120px'},{key:'nsDiff',label:'净收入净增(万)',w:'120px'}
+    ];
+    tableHtml = '<div class="table-wrap"><table><thead><tr>';
+    for(var i=0;i<cols.length;i++){
+      var c=cols[i], arrow='';
+      if(sk===c.key) arrow=sd>0?' ▲':' ▼';
+      tableHtml+='<th style="width:'+c.w+';cursor:pointer;white-space:nowrap" onclick="toggleDailySort(\'c\',\''+c.key+'\')">'+c.label+arrow+'</th>';
+    }
+    tableHtml+='</tr></thead><tbody>';
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i];
+      var cc=r.crDiff>0?'color:#16a34a':(r.crDiff<0?'color:#dc2626':'');
+      var nc=r.nsDiff>0?'color:#16a34a':(r.nsDiff<0?'color:#dc2626':'');
+      tableHtml+='<tr><td style="font-weight:600;white-space:nowrap">'+r.name+'</td><td style="text-align:center">'+r.count+'</td>';
+      tableHtml+='<td style="text-align:right">'+r.pt1.toFixed(2)+'</td><td style="text-align:right">'+r.cr1.toFixed(1)+'%</td>';
+      tableHtml+='<td style="text-align:right">'+r.pt2.toFixed(2)+'</td><td style="text-align:right">'+r.cr2.toFixed(1)+'%</td>';
+      tableHtml+='<td style="text-align:right;font-weight:600;'+cc+'">'+(r.crDiff>=0?'+':'')+r.crDiff.toFixed(1)+'</td>';
+      tableHtml+='<td style="text-align:right">'+r.ns1.toFixed(2)+'</td><td style="text-align:right">'+r.ns2.toFixed(2)+'</td>';
+      tableHtml+='<td style="text-align:right;font-weight:600;'+nc+'">'+(r.nsDiff>=0?'+':'')+r.nsDiff.toFixed(2)+'</td></tr>';
+    }
+    tableHtml+='</tbody></table></div>';
+  }
+  
+  h += tableHtml;
+  h += '</div>';
+  panel.innerHTML = h;
+}
+
+function renderMgrDaily() {
+  var dates = getHistoryDates();
+  var panel = document.getElementById('mgrDailyContent');
+  if (!panel) return;
+  
+  // City filter for mgr table - get city-mgr mapping from RAW_STORES
+  var cityMgrMap = {};
+  if (typeof RAW_STORES !== 'undefined') {
+    for (var i=0;i<RAW_STORES.length;i++){
+      var s=RAW_STORES[i];
+      if(s.type!=='FM私教馆'&&s.type!=='FM包月馆') continue;
+      if(!cityMgrMap[s.city]) cityMgrMap[s.city]=new Set();
+      cityMgrMap[s.city].add(s.mgr);
+    }
+  }
+  var allCities = Object.keys(cityMgrMap).sort();
+  
+  var h = '<div style="padding:20px">';
+  h += '<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;align-items:center">';
+  h += '<span style="font-size:15px;font-weight:600">区经日增对比</span>';
+  h += '<select onchange="mgrDailyFilter=this.value;renderMgrDaily()" style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px">';
+  h += '<option value="">全部城市</option>';
+  for(var i=0;i<allCities.length;i++){
+    var sel=mgrDailyFilter===allCities[i]?'selected':'';
+    h+='<option value="'+allCities[i]+'" '+sel+'>'+allCities[i]+'</option>';
+  }
+  h += '</select>';
+  h += '</div>';
+  
+  // Build data with city filter
+  var d1=dates[dates.length-2], d2=dates[dates.length-1];
+  var data1=HISTORY_PK[d1]['m'], data2=HISTORY_PK[d2]['m'];
+  var allNames={};
+  for(var k in data1) allNames[k]=1;
+  for(var k in data2) allNames[k]=1;
+  
+  // Get mgr-city mapping
+  var mgrCities = {};
+  if(typeof RAW_STORES!=='undefined'){
+    for(var i=0;i<RAW_STORES.length;i++){
+      var s=RAW_STORES[i];
+      if(s.type!=='FM私教馆'&&s.type!=='FM包月馆') continue;
+      if(!mgrCities[s.mgr]) mgrCities[s.mgr]=new Set();
+      mgrCities[s.mgr].add(s.city);
+    }
+  }
+  
+  var rows=[];
+  for(var name in allNames){
+    if(EXCLUDED_MGRS.has(name)) continue;
+    // City filter
+    if(mgrDailyFilter){
+      var mgrCs=mgrCities[name]||new Set();
+      if(!mgrCs.has(mgrDailyFilter)) continue;
+    }
+    var v1=data1[name]||[0,0,0], v2=data2[name]||[0,0,0];
+    var cr1=v1[0]>0?v1[1]/v1[0]*100:0, cr2=v2[0]>0?v2[1]/v2[0]*100:0;
+    rows.push({name:name,count:v2[2],pt1:v1[0],cr1:cr1,pt2:v2[0],cr2:cr2,crDiff:cr2-cr1,ns1:v1[1],ns2:v2[1],nsDiff:v2[1]-v1[1]});
+  }
+  
+  var sk=mgrDailySort.key, sd=mgrDailySort.dir;
+  rows.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return sd*va.localeCompare(vb);return sd*(va-vb);});
+  
+  var cols=[
+    {key:'name',label:'区域经理',w:'120px'},{key:'count',label:'门店',w:'60px'},
+    {key:'pt1',label:d1+'日目标(万)',w:'110px'},{key:'cr1',label:d1+'日完成率',w:'100px'},
+    {key:'pt2',label:d2+'日目标(万)',w:'110px'},{key:'cr2',label:d2+'日完成率',w:'100px'},
+    {key:'crDiff',label:'完成率变化(pp)',w:'120px'},{key:'ns1',label:d1+'日净收入(万)',w:'120px'},
+    {key:'ns2',label:d2+'日净收入(万)',w:'120px'},{key:'nsDiff',label:'净收入净增(万)',w:'120px'}
+  ];
+  h+='<div class="table-wrap"><table><thead><tr>';
+  for(var i=0;i<cols.length;i++){
+    var c=cols[i],arrow='';
+    if(sk===c.key) arrow=sd>0?' ▲':' ▼';
+    h+='<th style="width:'+c.w+';cursor:pointer;white-space:nowrap" onclick="toggleDailySort(\'m\',\''+c.key+'\')">'+c.label+arrow+'</th>';
+  }
+  h+='</tr></thead><tbody>';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var cc=r.crDiff>0?'color:#16a34a':(r.crDiff<0?'color:#dc2626':'');
+    var nc=r.nsDiff>0?'color:#16a34a':(r.nsDiff<0?'color:#dc2626':'');
+    h+='<tr><td style="font-weight:600;white-space:nowrap">'+r.name+'</td><td style="text-align:center">'+r.count+'</td>';
+    h+='<td style="text-align:right">'+r.pt1.toFixed(2)+'</td><td style="text-align:right">'+r.cr1.toFixed(1)+'%</td>';
+    h+='<td style="text-align:right">'+r.pt2.toFixed(2)+'</td><td style="text-align:right">'+r.cr2.toFixed(1)+'%</td>';
+    h+='<td style="text-align:right;font-weight:600;'+cc+'">'+(r.crDiff>=0?'+':'')+r.crDiff.toFixed(1)+'</td>';
+    h+='<td style="text-align:right">'+r.ns1.toFixed(2)+'</td><td style="text-align:right">'+r.ns2.toFixed(2)+'</td>';
+    h+='<td style="text-align:right;font-weight:600;'+nc+'">'+(r.nsDiff>=0?'+':'')+r.nsDiff.toFixed(2)+'</td></tr>';
+  }
+  h+='</tbody></table></div>';
+  h+='</div>';
+  panel.innerHTML=h;
 }
 
 </script>

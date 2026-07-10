@@ -1187,31 +1187,21 @@ function renderDailyCityTable(d1,d2,label1,label2){
   var allNames={};for(var k in data1)allNames[k]=1;for(var k in data2)allNames[k]=1;
   var allCities=Object.keys(allNames).sort();
 
-  // Build rows
-  var rows=[],totalPt1=0,totalPt2=0,totalNs1=0,totalNs2=0;
+  var rows=[],totalPt1=0,totalPt2=0,totalNs1=0,totalNs2=0,totalCnt=0;
   for(var name in allNames){
     if(dailyCityFilter&&name!==dailyCityFilter)continue;
     var v1=data1[name]||[0,0,0],v2=data2[name]||[0,0,0];
     var cr1=v1[0]>0?v1[1]/v1[0]*100:0,cr2=v2[0]>0?v2[1]/v2[0]*100:0;
     var nsDiff=v2[1]-v1[1],crDiff=cr2-cr1;
     rows.push({name:name,count:v2[2],pt1:v1[0],cr1:cr1,pt2:v2[0],cr2:cr2,crDiff:crDiff,ns1:v1[1],ns2:v2[1],nsDiff:nsDiff});
-    totalPt1+=v1[0];totalPt2+=v2[0];totalNs1+=v1[1];totalNs2+=v2[1];
+    totalPt1+=v1[0];totalPt2+=v2[0];totalNs1+=v1[1];totalNs2+=v2[1];totalCnt+=v2[2];
   }
   var sk=dailyCitySort.key,sd=dailyCitySort.dir;
   rows.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return sd*va.localeCompare(vb);return sd*(va-vb);});
 
-  // Summary cards
-  var totalCr1=totalPt1>0?totalNs1/totalPt1*100:0;
-  var totalCr2=totalPt2>0?totalNs2/totalPt2*100:0;
-  var totalNsDiff=totalNs2-totalNs1;
-  var totalCrDiff=totalCr2-totalCr1;
+  var totalCr1=totalPt1>0?totalNs1/totalPt1*100:0,totalCr2=totalPt2>0?totalNs2/totalPt2*100:0;
+  var totalNsDiff=totalNs2-totalNs1,totalCrDiff=totalCr2-totalCr1;
   var h='';
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">';
-  h+=summaryCard('全国完成率',totalCr2.toFixed(1)+'%',totalCrDiff>=0?'+'+totalCrDiff.toFixed(1)+'pp':totalCrDiff.toFixed(1)+'pp',totalCrDiff>=0);
-  h+=summaryCard('全国净收入',totalNs2.toFixed(1)+'万',totalNsDiff>=0?'+'+totalNsDiff.toFixed(1)+'万':totalNsDiff.toFixed(1)+'万',totalNsDiff>=0);
-  h+=summaryCard(label2+'目标',totalPt2.toFixed(1)+'万','','neutral');
-  h+=summaryCard('城市数',allCities.length+'','','neutral');
-  h+='</div>';
 
   // City filter
   h+='<div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center">';
@@ -1229,10 +1219,27 @@ function renderDailyCityTable(d1,d2,label1,label2){
     {key:'ns1',label:label1+'净收入',w:'100px'},{key:'ns2',label:label2+'净收入',w:'100px'},
     {key:'nsDiff',label:'净增(万)',w:'95px'}];
   h+='<div class="table-wrap" style="border-radius:12px;overflow:hidden;border:1px solid #e2e8f0"><table style="border-collapse:collapse;width:100%">';
-  h+='<thead><tr>';
+  // thead: column headers + total row (sticky)
+  h+='<thead>';
+  h+='<tr>';
   for(var i=0;i<cols.length;i++){var c=cols[i],arrow='';if(sk===c.key)arrow=sd>0?' ↑':' ↓';
-    h+='<th style="padding:12px 10px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;border-bottom:2px solid #e2e8f0;cursor:pointer;white-space:nowrap;width:'+c.w+'" onclick="toggleDailySort(\'c\',\''+c.key+'\')">'+c.label+'<span style="color:#3b82f6;margin-left:2px">'+arrow+'</span></th>';}
-  h+='</tr></thead><tbody>';
+    h+='<th style="padding:12px 10px;font-size:12px;font-weight:600;color:#64748b;background:#f8fafc;border-bottom:2px solid #e2e8f0;cursor:pointer;white-space:nowrap;width:'+c.w+'" onclick="toggleDailySort(\'c\',\''+c.key+'\')">'+c.label+'<span style="color:#3b82f6;margin-left:2px">'+arrow+'</span></th>';}
+  h+='</tr>';
+  // Total row (first row, sticky)
+  var tcc=totalCrDiff>0?'#16a34a':(totalCrDiff<0?'#dc2626':'#1e40af');
+  var tnc=totalNsDiff>0?'#16a34a':(totalNsDiff<0?'#dc2626':'#1e40af');
+  h+='<tr style="background:#eff6ff;font-weight:700;position:sticky;top:36px;z-index:1">';
+  h+='<td style="padding:11px 10px;color:#1e40af;border-bottom:2px solid #bfdbfe">合计</td>';
+  h+='<td style="padding:11px 10px;text-align:center;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalCnt+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalPt2.toFixed(2)+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalCr1.toFixed(1)+'%</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalCr2.toFixed(1)+'%</td>';
+  h+='<td style="padding:11px 10px;text-align:right;font-weight:700;color:'+tcc+';border-bottom:2px solid #bfdbfe">'+(totalCrDiff>=0?'+':'')+totalCrDiff.toFixed(1)+'pp</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalNs1.toFixed(2)+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalNs2.toFixed(2)+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;font-weight:700;color:'+tnc+';border-bottom:2px solid #bfdbfe">'+(totalNsDiff>=0?'+':'')+totalNsDiff.toFixed(2)+'</td>';
+  h+='</tr>';
+  h+='</thead><tbody>';
   for(var i=0;i<rows.length;i++){
     var r=rows[i];var bg=i%2===0?'#fff':'#f8fafc';
     h+='<tr style="background:'+bg+'">';
@@ -1248,21 +1255,6 @@ function renderDailyCityTable(d1,d2,label1,label2){
     var nc=r.nsDiff>0?'#16a34a':(r.nsDiff<0?'#dc2626':'#64748b');
     h+='<td style="padding:10px;text-align:right;font-weight:700;color:'+nc+';border-bottom:1px solid #f1f5f9">'+(r.nsDiff>=0?'+':'')+r.nsDiff.toFixed(2)+'</td>';
     h+='</tr>';}
-  // Total row
-  var tcr1=totalPt1>0?totalNs1/totalPt1*100:0,tcr2=totalPt2>0?totalNs2/totalPt2*100:0;
-  var tcrDiff=tcr2-tcr1;var tcc=tcrDiff>0?'#16a34a':(tcrDiff<0?'#dc2626':'#64748b');
-  var tnc=totalNsDiff>0?'#16a34a':(totalNsDiff<0?'#dc2626':'#64748b');
-  h+='<tr style="background:#eff6ff;font-weight:700">';
-  h+='<td style="padding:12px 10px;color:#1e40af;border-top:2px solid #bfdbfe">合计</td>';
-  h+='<td style="padding:12px 10px;text-align:center;color:#1e40af;border-top:2px solid #bfdbfe">'+rows.reduce(function(s,r){return s+r.count;},0)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+totalPt2.toFixed(2)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+tcr1.toFixed(1)+'%</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+tcr2.toFixed(1)+'%</td>';
-  h+='<td style="padding:12px 10px;text-align:right;font-weight:700;color:'+tcc+';border-top:2px solid #bfdbfe">'+(tcrDiff>=0?'+':'')+tcrDiff.toFixed(1)+'pp</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+totalNs1.toFixed(2)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+totalNs2.toFixed(2)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;font-weight:700;color:'+tnc+';border-top:2px solid #bfdbfe">'+(totalNsDiff>=0?'+':'')+totalNsDiff.toFixed(2)+'</td>';
-  h+='</tr>';
   h+='</tbody></table></div>';
   return h;
 }
@@ -1282,29 +1274,23 @@ function renderDailyMgrTable(d1,d2,label1,label2){
   }
   var allCities=Object.keys(cityMgrMap).sort();
 
-  var rows=[];
+  var rows=[],totalCnt=0;
   for(var name in allNames){
     if(EXCLUDED_MGRS.has(name))continue;
     if(dailyMgrFilter){var mcs=mgrCities[name]||new Set();if(!mcs.has(dailyMgrFilter))continue;}
     var v1=data1[name]||[0,0,0],v2=data2[name]||[0,0,0];
     var cr1=v1[0]>0?v1[1]/v1[0]*100:0,cr2=v2[0]>0?v2[1]/v2[0]*100:0;
     rows.push({name:name,count:v2[2],pt1:v1[0],cr1:cr1,pt2:v2[0],cr2:cr2,crDiff:cr2-cr1,ns1:v1[1],ns2:v2[1],nsDiff:v2[1]-v1[1]});
+    totalCnt+=v2[2];
   }
   var sk=dailyMgrSort.key,sd=dailyMgrSort.dir;
   rows.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return sd*va.localeCompare(vb);return sd*(va-vb);});
 
-  // Summary
   var totalPt1=0,totalPt2=0,totalNs1=0,totalNs2=0;
   for(var i=0;i<rows.length;i++){totalPt1+=rows[i].pt1;totalPt2+=rows[i].pt2;totalNs1+=rows[i].ns1;totalNs2+=rows[i].ns2;}
   var totalCr1=totalPt1>0?totalNs1/totalPt1*100:0,totalCr2=totalPt2>0?totalNs2/totalPt2*100:0;
   var totalNsDiff=totalNs2-totalNs1,totalCrDiff=totalCr2-totalCr1;
   var h='';
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">';
-  h+=summaryCard('完成率',totalCr2.toFixed(1)+'%',totalCrDiff>=0?'+'+totalCrDiff.toFixed(1)+'pp':totalCrDiff.toFixed(1)+'pp',totalCrDiff>=0);
-  h+=summaryCard('净收入',totalNs2.toFixed(1)+'万',totalNsDiff>=0?'+'+totalNsDiff.toFixed(1)+'万':totalNsDiff.toFixed(1)+'万',totalNsDiff>=0);
-  h+=summaryCard('区经数',rows.length+'','','neutral');
-  h+=summaryCard('门店数',rows.reduce(function(s,r){return s+r.count;},0)+'','','neutral');
-  h+='</div>';
 
   // City filter
   h+='<div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center">';
@@ -1322,10 +1308,27 @@ function renderDailyMgrTable(d1,d2,label1,label2){
     {key:'ns1',label:label1+'净收入',w:'100px'},{key:'ns2',label:label2+'净收入',w:'100px'},
     {key:'nsDiff',label:'净增(万)',w:'95px'}];
   h+='<div class="table-wrap" style="border-radius:12px;overflow:hidden;border:1px solid #e2e8f0"><table style="border-collapse:collapse;width:100%">';
-  h+='<thead><tr>';
+  // thead: column headers + total row (sticky)
+  h+='<thead>';
+  h+='<tr>';
   for(var i=0;i<cols.length;i++){var c=cols[i],arrow='';if(sk===c.key)arrow=sd>0?' ↑':' ↓';
-    h+='<th style="padding:12px 10px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;border-bottom:2px solid #e2e8f0;cursor:pointer;white-space:nowrap;width:'+c.w+'" onclick="toggleDailySort(\'m\',\''+c.key+'\')">'+c.label+'<span style="color:#3b82f6;margin-left:2px">'+arrow+'</span></th>';}
-  h+='</tr></thead><tbody>';
+    h+='<th style="padding:12px 10px;font-size:12px;font-weight:600;color:#64748b;background:#f8fafc;border-bottom:2px solid #e2e8f0;cursor:pointer;white-space:nowrap;width:'+c.w+'" onclick="toggleDailySort(\'m\',\''+c.key+'\')">'+c.label+'<span style="color:#3b82f6;margin-left:2px">'+arrow+'</span></th>';}
+  h+='</tr>';
+  // Total row (first row, sticky)
+  var tcc=totalCrDiff>0?'#16a34a':(totalCrDiff<0?'#dc2626':'#1e40af');
+  var tnc=totalNsDiff>0?'#16a34a':(totalNsDiff<0?'#dc2626':'#1e40af');
+  h+='<tr style="background:#eff6ff;font-weight:700;position:sticky;top:36px;z-index:1">';
+  h+='<td style="padding:11px 10px;color:#1e40af;border-bottom:2px solid #bfdbfe">合计</td>';
+  h+='<td style="padding:11px 10px;text-align:center;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalCnt+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalPt2.toFixed(2)+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalCr1.toFixed(1)+'%</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalCr2.toFixed(1)+'%</td>';
+  h+='<td style="padding:11px 10px;text-align:right;font-weight:700;color:'+tcc+';border-bottom:2px solid #bfdbfe">'+(totalCrDiff>=0?'+':'')+totalCrDiff.toFixed(1)+'pp</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalNs1.toFixed(2)+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;color:#1e40af;border-bottom:2px solid #bfdbfe">'+totalNs2.toFixed(2)+'</td>';
+  h+='<td style="padding:11px 10px;text-align:right;font-weight:700;color:'+tnc+';border-bottom:2px solid #bfdbfe">'+(totalNsDiff>=0?'+':'')+totalNsDiff.toFixed(2)+'</td>';
+  h+='</tr>';
+  h+='</thead><tbody>';
   for(var i=0;i<rows.length;i++){
     var r=rows[i];var bg=i%2===0?'#fff':'#f8fafc';
     h+='<tr style="background:'+bg+'">';
@@ -1341,21 +1344,6 @@ function renderDailyMgrTable(d1,d2,label1,label2){
     var nc=r.nsDiff>0?'#16a34a':(r.nsDiff<0?'#dc2626':'#64748b');
     h+='<td style="padding:10px;text-align:right;font-weight:700;color:'+nc+';border-bottom:1px solid #f1f5f9">'+(r.nsDiff>=0?'+':'')+r.nsDiff.toFixed(2)+'</td>';
     h+='</tr>';}
-  // Total row
-  var tcr1=totalPt1>0?totalNs1/totalPt1*100:0,tcr2=totalPt2>0?totalNs2/totalPt2*100:0;
-  var tcrDiff=tcr2-tcr1;var tcc=tcrDiff>0?'#16a34a':(tcrDiff<0?'#dc2626':'#64748b');
-  var tnc=totalNsDiff>0?'#16a34a':(totalNsDiff<0?'#dc2626':'#64748b');
-  h+='<tr style="background:#eff6ff;font-weight:700">';
-  h+='<td style="padding:12px 10px;color:#1e40af;border-top:2px solid #bfdbfe">合计</td>';
-  h+='<td style="padding:12px 10px;text-align:center;color:#1e40af;border-top:2px solid #bfdbfe">'+rows.reduce(function(s,r){return s+r.count;},0)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+totalPt2.toFixed(2)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+tcr1.toFixed(1)+'%</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+tcr2.toFixed(1)+'%</td>';
-  h+='<td style="padding:12px 10px;text-align:right;font-weight:700;color:'+tcc+';border-top:2px solid #bfdbfe">'+(tcrDiff>=0?'+':'')+tcrDiff.toFixed(1)+'pp</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+totalNs1.toFixed(2)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;color:#1e40af;border-top:2px solid #bfdbfe">'+totalNs2.toFixed(2)+'</td>';
-  h+='<td style="padding:12px 10px;text-align:right;font-weight:700;color:'+tnc+';border-top:2px solid #bfdbfe">'+(totalNsDiff>=0?'+':'')+totalNsDiff.toFixed(2)+'</td>';
-  h+='</tr>';
   h+='</tbody></table></div>';
   return h;
 }

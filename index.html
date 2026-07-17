@@ -1125,7 +1125,25 @@ var dailyCityFilter='';
 var dailyMgrFilter='';
 var dailyDate1='';
 var dailyDate2='';
+var dailyTypeFilter='';
+var dailyStatusFilter='';
 var EXCLUDED_MGRS=new Set(["左明晖","李奔","金慧昕","李崇义","(null)","应杰","任博潭","吉博文","言文","郑前前"]);
+
+// Generate store-level detail for latest HISTORY_PK day from RAW_STORES
+(function(){
+  var dates=Object.keys(HISTORY_PK).sort(function(a,b){return parseInt(a)-parseInt(b);});
+  if(!dates.length)return;
+  var latest=dates[dates.length-1];
+  if(HISTORY_PK[latest].s)return;
+  if(typeof RAW_STORES==='undefined')return;
+  var stores=[];
+  for(var i=0;i<RAW_STORES.length;i++){
+    var s=RAW_STORES[i];
+    if(s.type!=='FM私教馆'&&s.type!=='FM包月馆')continue;
+    stores.push({n:s.name,c:s.city,m:s.mgr,t:s.type,st:s.status,pt:s.pt,ns:s.ns});
+  }
+  if(stores.length>0)HISTORY_PK[latest].s=stores;
+})();
 
 function switchDailyView(mode){
   dailyViewMode=mode;
@@ -1159,39 +1177,97 @@ function changeDailyDate(which,val){
   if(which===1)dailyDate1=val;else dailyDate2=val;
   renderDailyCombined();
 }
+function changeDailyTypeFilter(val){dailyTypeFilter=val;renderDailyCombined();}
+function changeDailyStatusFilter(val){dailyStatusFilter=val;renderDailyCombined();}
+function getDailyAgg(dayKey,dim){
+  var dayData=HISTORY_PK[dayKey];
+  if(!dayData)return {};
+  if(!dailyTypeFilter&&!dailyStatusFilter)return dayData[dim]||{};
+  if(!dayData.s)return {__noDetail:true};
+  var result={};
+  for(var i=0;i<dayData.s.length;i++){
+    var st=dayData.s[i];
+    if(dailyTypeFilter&&st.t!==dailyTypeFilter)continue;
+    if(dailyStatusFilter&&st.st!==dailyStatusFilter)continue;
+    var key=dim==='c'?st.c:st.m;
+    if(!result[key])result[key]=[0,0,0];
+    result[key][0]+=st.pt/10000;
+    result[key][1]+=st.ns/10000;
+    result[key][2]+=1;
+  }
+  for(var k in result){result[k]=[Math.round(result[k][0]*100)/100,Math.round(result[k][1]*100)/100,result[k][2]];}
+  return result;
+}
+function getAvailableTypes(){
+  var dates=Object.keys(HISTORY_PK).sort(function(a,b){return parseInt(a)-parseInt(b);});
+  for(var i=dates.length-1;i>=0;i--){
+    var s=HISTORY_PK[dates[i]].s;
+    if(s){var types={};for(var j=0;j<s.length;j++)types[s[j].t]=1;return Object.keys(types).sort();}
+  }
+  if(typeof RAW_STORES!=='undefined'){var types={};for(var j=0;j<RAW_STORES.length;j++){var r=RAW_STORES[j];if(r.type==='FM私教馆'||r.type==='FM包月馆')types[r.type]=1;}return Object.keys(types).sort();}
+  return ['FM包月馆','FM私教馆'];
+}
+function getAvailableStatuses(){
+  var dates=Object.keys(HISTORY_PK).sort(function(a,b){return parseInt(a)-parseInt(b);});
+  for(var i=dates.length-1;i>=0;i--){
+    var s=HISTORY_PK[dates[i]].s;
+    if(s){var sts={};for(var j=0;j<s.length;j++)sts[s[j].st]=1;return Object.keys(sts).sort();}
+  }
+  if(typeof RAW_STORES!=='undefined'){var sts={};for(var j=0;j<RAW_STORES.length;j++){var r=RAW_STORES[j];if(r.type==='FM私教馆'||r.type==='FM包月馆')sts[r.status]=1;}return Object.keys(sts).sort();}
+  return ['营业中','待营业'];
+}
 function renderDailyCombined(){
   var dates=Object.keys(HISTORY_PK).sort(function(a,b){return parseInt(a)-parseInt(b);});
   var panel=document.getElementById('dailyContent');
   if(!panel)return;
   if(dates.length<2){panel.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8"><div style="font-size:48px;margin-bottom:16px">📊</div><div style="font-size:16px">历史数据不足2天，无法对比</div><div style="font-size:13px;margin-top:8px">每天更新看板后会自动积累历史数据</div></div>';return;}
-  // Auto-select defaults if not set or invalid
   if(!dailyDate1||dates.indexOf(dailyDate1)===-1)dailyDate1=dates[dates.length-2];
   if(!dailyDate2||dates.indexOf(dailyDate2)===-1)dailyDate2=dates[dates.length-1];
-  // Ensure d1 < d2
   if(dates.indexOf(dailyDate1)>dates.indexOf(dailyDate2)){var tmp=dailyDate1;dailyDate1=dailyDate2;dailyDate2=tmp;}
   var d1=dailyDate1,d2=dailyDate2;
   var label1=dailyDateLabel(d1),label2=dailyDateLabel(d2);
+  var hasFilter=dailyTypeFilter||dailyStatusFilter;
+  var d1HasDetail=HISTORY_PK[d1]&&HISTORY_PK[d1].s;
+  var d2HasDetail=HISTORY_PK[d2]&&HISTORY_PK[d2].s;
 
   var h='';
-  // Date selectors
   h+='<div style="padding:20px 20px 0 20px">';
-  h+='<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">';
+  // Date selectors
+  h+='<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">';
   h+='<span style="font-size:13px;color:#64748b;font-weight:600">对比日期：</span>';
   h+='<select onchange="changeDailyDate(1,this.value)" style="padding:8px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;color:#334155;min-width:100px;cursor:pointer">';
-  for(var i=0;i<dates.length;i++){
-    var sel=dates[i]===d1?' selected':'';
-    h+='<option value="'+dates[i]+'"'+sel+'>'+dailyDateLabel(dates[i])+'</option>';
-  }
+  for(var i=0;i<dates.length;i++){var sel=dates[i]===d1?' selected':'';h+='<option value="'+dates[i]+'"'+sel+'>'+dailyDateLabel(dates[i])+'</option>';}
   h+='</select>';
   h+='<span style="font-size:14px;color:#94a3b8">→</span>';
   h+='<select onchange="changeDailyDate(2,this.value)" style="padding:8px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;color:#334155;min-width:100px;cursor:pointer">';
-  for(var i=0;i<dates.length;i++){
-    var sel=dates[i]===d2?' selected':'';
-    h+='<option value="'+dates[i]+'"'+sel+'>'+dailyDateLabel(dates[i])+'</option>';
-  }
+  for(var i=0;i<dates.length;i++){var sel=dates[i]===d2?' selected':'';h+='<option value="'+dates[i]+'"'+sel+'>'+dailyDateLabel(dates[i])+'</option>';}
   h+='</select>';
   h+='</div>';
-  // Top toggle - large and prominent
+  // Type & Status filters
+  var availTypes=getAvailableTypes(),availStatuses=getAvailableStatuses();
+  h+='<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">';
+  h+='<span style="font-size:13px;color:#64748b;font-weight:600">门店类型：</span>';
+  h+='<select onchange="changeDailyTypeFilter(this.value)" style="padding:8px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;color:#334155;min-width:120px;cursor:pointer">';
+  h+='<option value="">全部类型</option>';
+  for(var i=0;i<availTypes.length;i++){h+='<option value="'+availTypes[i]+'"'+(dailyTypeFilter===availTypes[i]?' selected':'')+'>'+availTypes[i]+'</option>';}
+  h+='</select>';
+  h+='<span style="font-size:13px;color:#64748b;font-weight:600;margin-left:6px">营业状态：</span>';
+  h+='<select onchange="changeDailyStatusFilter(this.value)" style="padding:8px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;color:#334155;min-width:100px;cursor:pointer">';
+  h+='<option value="">全部状态</option>';
+  for(var i=0;i<availStatuses.length;i++){h+='<option value="'+availStatuses[i]+'"'+(dailyStatusFilter===availStatuses[i]?' selected':'')+'>'+availStatuses[i]+'</option>';}
+  h+='</select>';
+  h+='</div>';
+  // Warning if filter applied but detail data missing
+  if(hasFilter&&(!d1HasDetail||!d2HasDetail)){
+    h+='<div style="text-align:center;margin-bottom:12px;padding:8px 16px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e">';
+    h+='⚠ 筛选功能需要门店级明细数据，';
+    if(!d1HasDetail)h+=dailyDateLabel(d1)+'暂无明细数据';
+    if(!d1HasDetail&&!d2HasDetail)h+='，';
+    if(!d2HasDetail)h+=dailyDateLabel(d2)+'暂无明细数据';
+    h+='。每日更新后会自动积累，届时筛选将自动生效。';
+    h+='</div>';
+  }
+  // Top toggle
   h+='<div style="display:flex;justify-content:center;margin-bottom:16px">';
   h+='<div style="display:inline-flex;background:#f1f5f9;border-radius:12px;padding:4px;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,.08)">';
   h+='<button id="dailyCityBtn" onclick="switchDailyView(\'city\')" style="padding:12px 36px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;background:'+(dailyViewMode==='city'?'#3b82f6':'transparent')+';color:'+(dailyViewMode==='city'?'#fff':'#64748b')+';box-shadow:'+(dailyViewMode==='city'?'0 2px 8px rgba(59,130,246,.3)':'none')+'">城市</button>';
@@ -1199,7 +1275,7 @@ function renderDailyCombined(){
   h+='</div></div>';
   // Date subtitle
   h+='<div style="text-align:center;margin-bottom:16px">';
-  h+='<div style="font-size:14px;color:#94a3b8;font-weight:500">'+label1+' → '+label2+' 业绩对比</div></div>';
+  h+='<div style="font-size:14px;color:#94a3b8;font-weight:500">'+label1+' → '+label2+' 业绩对比'+(hasFilter?' (已筛选)':'')+'</div></div>';
 
   if(dailyViewMode==='city'){
     h+=renderDailyCityTable(d1,d2,label1,label2);
@@ -1211,7 +1287,8 @@ function renderDailyCombined(){
 }
 
 function renderDailyCityTable(d1,d2,label1,label2){
-  var data1=HISTORY_PK[d1]['c'],data2=HISTORY_PK[d2]['c'];
+  var data1=getDailyAgg(d1,'c'),data2=getDailyAgg(d2,'c');
+  if(data1.__noDetail||data2.__noDetail)return '<div style="padding:20px;text-align:center;color:#94a3b8">该日期暂无门店级明细数据，无法按条件筛选</div>';
   var allNames={};for(var k in data1)allNames[k]=1;for(var k in data2)allNames[k]=1;
   var allCities=Object.keys(allNames).sort();
 
@@ -1288,7 +1365,8 @@ function renderDailyCityTable(d1,d2,label1,label2){
 }
 
 function renderDailyMgrTable(d1,d2,label1,label2){
-  var data1=HISTORY_PK[d1]['m'],data2=HISTORY_PK[d2]['m'];
+  var data1=getDailyAgg(d1,'m'),data2=getDailyAgg(d2,'m');
+  if(data1.__noDetail||data2.__noDetail)return '<div style="padding:20px;text-align:center;color:#94a3b8">该日期暂无门店级明细数据，无法按条件筛选</div>';
   var allNames={};for(var k in data1)allNames[k]=1;for(var k in data2)allNames[k]=1;
 
   // Build mgr-city mapping from RAW_STORES

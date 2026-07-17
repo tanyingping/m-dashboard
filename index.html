@@ -1123,6 +1123,8 @@ var dailyCitySort={key:'crDiff',dir:-1};
 var dailyMgrSort={key:'crDiff',dir:-1};
 var dailyCityFilter='';
 var dailyMgrFilter='';
+var dailyDate1='';
+var dailyDate2='';
 var EXCLUDED_MGRS=new Set(["左明晖","李奔","金慧昕","李崇义","(null)","应杰","任博潭","吉博文","言文","郑前前"]);
 
 function switchDailyView(mode){
@@ -1146,24 +1148,50 @@ function toggleDailySort(type,key){
   else{if(dailyMgrSort.key===key)dailyMgrSort.dir*=-1;else{dailyMgrSort.key=key;dailyMgrSort.dir=-1;}renderDailyCombined();}
 }
 
+function dailyDateLabel(d){
+  var m,dd;
+  if(d.length===4){m=parseInt(d.substr(0,2));dd=parseInt(d.substr(2,2));}
+  else{m=7;dd=parseInt(d);}
+  dd-=1;if(dd<=0){m-=1;dd=30;}
+  if(d.length===4)return m+'月'+dd+'日';return dd+'日';
+}
+function changeDailyDate(which,val){
+  if(which===1)dailyDate1=val;else dailyDate2=val;
+  renderDailyCombined();
+}
 function renderDailyCombined(){
   var dates=Object.keys(HISTORY_PK).sort(function(a,b){return parseInt(a)-parseInt(b);});
   var panel=document.getElementById('dailyContent');
   if(!panel)return;
   if(dates.length<2){panel.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8"><div style="font-size:48px;margin-bottom:16px">📊</div><div style="font-size:16px">历史数据不足2天，无法对比</div><div style="font-size:13px;margin-top:8px">每天更新看板后会自动积累历史数据</div></div>';return;}
-  var d1=dates[dates.length-2],d2=dates[dates.length-1];
-  function dateLabel(d){
-    var m,dd;
-    if(d.length===4){m=parseInt(d.substr(0,2));dd=parseInt(d.substr(2,2));}
-    else{m=7;dd=parseInt(d);}
-    dd-=1;if(dd<=0){m-=1;dd=30;}
-    if(d.length===4)return m+'月'+dd+'日';return dd+'日';
-  }
-  var label1=dateLabel(d1),label2=dateLabel(d2);
+  // Auto-select defaults if not set or invalid
+  if(!dailyDate1||dates.indexOf(dailyDate1)===-1)dailyDate1=dates[dates.length-2];
+  if(!dailyDate2||dates.indexOf(dailyDate2)===-1)dailyDate2=dates[dates.length-1];
+  // Ensure d1 < d2
+  if(dates.indexOf(dailyDate1)>dates.indexOf(dailyDate2)){var tmp=dailyDate1;dailyDate1=dailyDate2;dailyDate2=tmp;}
+  var d1=dailyDate1,d2=dailyDate2;
+  var label1=dailyDateLabel(d1),label2=dailyDateLabel(d2);
 
   var h='';
-  // Top toggle - large and prominent
+  // Date selectors
   h+='<div style="padding:20px 20px 0 20px">';
+  h+='<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">';
+  h+='<span style="font-size:13px;color:#64748b;font-weight:600">对比日期：</span>';
+  h+='<select onchange="changeDailyDate(1,this.value)" style="padding:8px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;color:#334155;min-width:100px;cursor:pointer">';
+  for(var i=0;i<dates.length;i++){
+    var sel=dates[i]===d1?' selected':'';
+    h+='<option value="'+dates[i]+'"'+sel+'>'+dailyDateLabel(dates[i])+'</option>';
+  }
+  h+='</select>';
+  h+='<span style="font-size:14px;color:#94a3b8">→</span>';
+  h+='<select onchange="changeDailyDate(2,this.value)" style="padding:8px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;color:#334155;min-width:100px;cursor:pointer">';
+  for(var i=0;i<dates.length;i++){
+    var sel=dates[i]===d2?' selected':'';
+    h+='<option value="'+dates[i]+'"'+sel+'>'+dailyDateLabel(dates[i])+'</option>';
+  }
+  h+='</select>';
+  h+='</div>';
+  // Top toggle - large and prominent
   h+='<div style="display:flex;justify-content:center;margin-bottom:16px">';
   h+='<div style="display:inline-flex;background:#f1f5f9;border-radius:12px;padding:4px;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,.08)">';
   h+='<button id="dailyCityBtn" onclick="switchDailyView(\'city\')" style="padding:12px 36px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;background:'+(dailyViewMode==='city'?'#3b82f6':'transparent')+';color:'+(dailyViewMode==='city'?'#fff':'#64748b')+';box-shadow:'+(dailyViewMode==='city'?'0 2px 8px rgba(59,130,246,.3)':'none')+'">城市</button>';

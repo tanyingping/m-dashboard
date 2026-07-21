@@ -1170,7 +1170,6 @@ function dailyDateLabel(d){
   var m,dd;
   if(d.length===4){m=parseInt(d.substr(0,2));dd=parseInt(d.substr(2,2));}
   else{m=7;dd=parseInt(d);}
-  dd-=1;if(dd<=0){m-=1;dd=30;}
   if(d.length===4)return m+'月'+dd+'日';return dd+'日';
 }
 function changeDailyDate(which,val){

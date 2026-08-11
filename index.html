@@ -254,26 +254,12 @@ function aggStores(stores) {
 function buildFilteredData(filter) {
   const stores = filterStores(filter);
   const nat = aggStores(stores);
-  function computeLabels(obj) {
-    const L = [];
-    if(obj['业绩完成率']<nat['业绩完成率']) L.push('业绩完成率↓');
-    if(obj['复购完成率']<nat['复购完成率']) L.push('复购完成率↓');
-    if(obj['复购率']<nat['复购率']) L.push('0-30天复购率↓');
-    if(obj['当月拉新复购率']<nat['当月拉新复购率']) L.push('当月拉新复购率↓');
-    if((obj['店均体验课']||0)<(nat['店均体验课']||0)) L.push('体验课量↓');
-    if(obj['上课率']<nat['上课率']) L.push('上课率↓');
-    if(obj['消课转化率']<nat['消课转化率']) L.push('消课转化率↓');
-    if(obj['连续包季复购率']<nat['连续包季复购率']) L.push('连续包季复购率↓');
-    return L;
-  }
   // By city
   const cityMap = {};
   stores.forEach(s => { (cityMap[s.city] = cityMap[s.city]||[]).push(s); });
   const cities = Object.entries(cityMap).map(([city, grp]) => {
     const a = aggStores(grp);
     a.city = city; a.stores = grp.map(s=>s.name);
-    a.labels = computeLabels(a);
-    a.label_count = a.labels.length;
     return a;
   }).sort((a,b) => b.净销售额 - a.净销售额);
   // By manager
@@ -283,7 +269,6 @@ function buildFilteredData(filter) {
     const a = aggStores(grp);
     a.manager = mgr; a.stores = grp.map(s=>s.name);
     a.cities = [...new Set(grp.map(s=>s.city))];
-    a.labels = computeLabels(a); a.label_count = a.labels.length;
     return a;
   }).sort((a,b) => b.净销售额 - a.净销售额);
   // Store-level
@@ -329,8 +314,6 @@ function buildFilteredData(filter) {
     lx_new:s.lx_new||0, lx_new_rebuy:s.lx_new_rebuy||0,
     "当月拉新用户数":s.lx_new||0, "当月拉新复购率":s.lx_new?Math.round((s.lx_new_rebuy||0)/s.lx_new*1000)/10:0,
   };
-    row.labels = computeLabels(row);
-    row.label_count = row.labels.length;
     return row;
   });
   return {national: nat, cities, managers, stores: storeRows, total_stores: stores.length};
@@ -413,20 +396,6 @@ let storeSortKey = null, storeSortDir = 'desc';
 document.getElementById('dateDisplay').textContent = '数据日期：2026-08-11';
 const _initStores = RAW_STORES.filter(s=>s.status==='营业中');
 document.getElementById('storeDisplay').textContent = '门店：' + _initStores.length + '家 / ' + [...new Set(_initStores.map(s=>s.city))].length + '城市 / ' + [...new Set(_initStores.map(s=>s.mgr))].length + '区经';
-
-
-const labelType = {
-  '业绩完成率↓':'danger','复购完成率↓':'danger','0-30天复购率↓':'warning','当月拉新复购率↓':'warning',
-  '体验课量↓':'warning','上课率↓':'warning','消课转化率↓':'warning',
-  '综合偏低':'danger','退款异常':'danger','拉新瓶颈':'danger','退款偏高':'warning',
-  '拉新偏弱':'warning','复购乏力':'warning','体验课转化弱':'warning','体验课到课低':'warning',
-  '体验课量偏低':'warning','拉新客单价偏低':'info','复购客单价偏低':'info','人力成本偏高':'warning',
-  '表现良好':'success','需持续关注':'info'
-};
-function getBadgeClass(l){return 'badge badge-'+(labelType[l]||'info')}
-
-
-
 
 
 function switchTab(tab){
@@ -616,11 +585,10 @@ const commonMetricCols = [
 // City
 const cityCols=[
   {key:'city',label:'城市',sortable:false,render:c=>`<span style="font-weight:600">${c.city}</span>`},
-  {key:'labels',label:'诊断标签',sortable:false,render:c=>c.labels.map(l=>`<span class="${getBadgeClass(l)}">${l}</span>`).join(' ')},
   ...commonMetricCols,
 ];
 const cityCats=[
-  {label:'',span:7},
+  {label:'',span:6},
   {label:'复购核心数据',span:5,color:'#b71c1c'},
   {label:'复购盘点',span:8,color:'#4a148c'},
   {label:'连续包季复购',span:2,color:'#1a237e'},
@@ -632,11 +600,10 @@ const cityCats=[
 // Manager
 const mgrCols=[
   {key:'manager',label:'区经',sortable:false,render:c=>`<span style="font-weight:600">${c.manager}</span>`},
-  {key:'labels',label:'诊断标签',sortable:false,render:c=>c.labels.map(l=>`<span class="${getBadgeClass(l)}">${l}</span>`).join(' ')},
   ...commonMetricCols,
 ];
 const mgrCats=[
-  {label:'',span:7},
+  {label:'',span:6},
   {label:'复购核心数据',span:5,color:'#b71c1c'},
   {label:'复购盘点',span:8,color:'#4a148c'},
   {label:'连续包季复购',span:2,color:'#1a237e'},
@@ -650,7 +617,6 @@ const storeCols=[
   {key:'store',label:'门店',sortable:false,render:c=>`<span style="font-weight:600;font-size:11px">${c.store}</span>`},
   {key:'city',label:'城市',sortable:true,render:c=>`<span style="font-size:12px">${c.city}</span>`},
   {key:'manager',label:'区经',sortable:true,render:c=>`<span style="font-size:12px">${c.manager}</span>`},
-  {key:'labels',label:'诊断标签',sortable:false,render:c=>c.labels.map(l=>`<span class="${getBadgeClass(l)}">${l}</span>`).join(' ')},
   {key:'业绩完成率',label:'业绩完成率',sortable:true,suffix:'%',bench:nat.业绩完成率,lower:true},
   {key:'业绩目标',label:'目标',sortable:true,render:c=>(c.业绩目标/10000).toFixed(0)+'万'},
   {key:'店均净收入',label:'净收入',sortable:true,prefix:'¥'},
@@ -684,7 +650,7 @@ const storeCols=[
   {key:'当月拉新复购率',label:'当月拉新复购率',sortable:true,suffix:'%',bench:nat.当月拉新复购率,lower:true},
 ];
 const storeCats=[
-  {label:'',span:8},
+  {label:'',span:6},
   {label:'复购核心数据',span:5,color:'#b71c1c'},
   {label:'复购盘点',span:8,color:'#4a148c'},
   {label:'连续包季复购',span:2,color:'#1a237e'},
@@ -804,7 +770,7 @@ function renderDetail(name){
   let html=`
     <div class="detail-header fade-in">
       <h2>${c.city}</h2><span class="store-count">${c.store_count}家门店</span>
-      <div class="detail-labels">${c.labels.map(l=>`<span class="${getBadgeClass(l)}">${l}</span>`).join('')}</div>
+      
     </div>
     <div class="metrics-grid fade-in">
       ${metrics.map(m=>`<div class="metric-card ${m.status}"><div class="mc-label">${m.label}</div><div class="mc-value">${m.value}</div>${m.sub?`<div class="mc-sub">${m.sub}</div>`:''} ${m.bench||''}</div>`).join('')}
@@ -1012,15 +978,7 @@ function renderDqz(){
     a.store_count = rawGroup.length;
     a.cities = [...new Set(stores.map(s=>s.city))].sort();
     const dn = data.national;
-    a.labels = [];
-    if(a['业绩完成率']<dn['业绩完成率']) a.labels.push('业绩完成率↓');
-    if(a['复购完成率']<dn['复购完成率']) a.labels.push('复购完成率↓');
-    if(a['复购率']<dn['复购率']) a.labels.push('0-30天复购率↓');
-    if(a['当月拉新复购率']<dn['当月拉新复购率']) a.labels.push('当月拉新复购率↓');
-    if((a['店均体验课']||0)<(dn['店均体验课']||0)) a.labels.push('体验课量↓');
-    if(a['上课率']<dn['上课率']) a.labels.push('上课率↓');
-    if(a['消课转化率']<dn['消课转化率']) a.labels.push('消课转化率↓');
-    return a;
+        return a;
   });
 
   // Sort
@@ -1058,14 +1016,14 @@ function renderDqz(){
     html += '<div class="table-wrap"><table class="data-table" style="min-width:1800px;font-size:13px">';
     // Category headers
     html += '<thead><tr>';
-    html += '<th colspan="4" style="background:#1a237e"></th>';
+    html += '<th colspan="3" style="background:#1a237e"></th>';
     html += '<th colspan="3" class="cat-header" style="background:#b71c1c;border-bottom:1px solid rgba(255,255,255,.2)">业绩核心</th>';
     html += '<th colspan="3" class="cat-header" style="background:#004d40;border-bottom:1px solid rgba(255,255,255,.2)">拉新核心</th>';
     html += '<th colspan="3" class="cat-header" style="background:#4a148c;border-bottom:1px solid rgba(255,255,255,.2)">复购核心</th>';
     html += '<th colspan="3" class="cat-header" style="background:#e65100;border-bottom:1px solid rgba(255,255,255,.2)">体验课</th>';
     html += '<th colspan="2" class="cat-header" style="background:#1565c0;border-bottom:1px solid rgba(255,255,255,.2)">运营</th>';
     html += '</tr><tr>';
-    html += th('dqz','大区总')+th('store_count','门店数')+'<th>管辖城市</th><th>诊断标签</th>';
+    html += th('dqz','大区总')+th('store_count','门店数')+'<th>管辖城市</th>';
     html += th('业绩完成率','业绩完成率')+th('店均净收入','店均净收入')+th('退款率','退款率');
     html += th('拉新完成率','拉新完成率')+th('店均拉新','店均拉新')+th('拉新客单价','拉新客单价');
     html += th('复购率','0-30天复购率')+th('复购店均净收入','复购店均净收入')+th('复购客单价','复购客单价');
@@ -1103,7 +1061,7 @@ function renderDqz(){
       html += '<td class="city-col" style="font-weight:700;font-size:14px;color:#1a237e">'+d.dqz+'</td>';
       html += '<td style="font-weight:600">'+d.store_count+'家</td>';
       html += '<td style="font-size:11px;text-align:left;max-width:200px;white-space:normal;line-height:1.4">'+d.cities.join('、')+'</td>';
-      html += '<td style="text-align:left">'+d.labels.map(l=>'<span class="'+getBadgeClass(l)+'" style="font-size:11px">'+l+'</span>').join(' ')+'</td>';
+      
 
       // 业绩
       html += '<td class="'+cellColor(d['业绩完成率'],n['业绩完成率'],false)+'"><b>'+rCr+' '+d['业绩完成率']+'%</b></td>';

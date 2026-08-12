@@ -1474,9 +1474,12 @@ function summaryCard(title,value,change,positive){
 }
 
 
-const YOY_DATA = {"上海市": {"M馆": {"n25": 33, "r25": 5202023.03, "n26": 38, "r26": 824557.47, "avg25": 157637.06, "avg26": 21698.88}, "L馆": {"n25": 9, "r25": 972923.33, "n26": 15, "r26": 273559.63, "avg25": 108102.59, "avg26": 18237.31}}, "北京市": {"M馆": {"n25": 63, "r25": 9588955.68, "n26": 68, "r26": 2219985.24, "avg25": 152205.65, "avg26": 32646.84}, "L馆": {"n25": 6, "r25": 538093.1, "n26": 6, "r26": 140543.6, "avg25": 89682.18, "avg26": 23423.93}}, "南京市": {"M馆": {"n25": 27, "r25": 3199000.59, "n26": 28, "r26": 604085.13, "avg25": 118481.5, "avg26": 21574.47}, "L馆": {"n25": 8, "r25": 813405.85, "n26": 11, "r26": 145075.39, "avg25": 101675.73, "avg26": 13188.67}}, "合肥市": {"M馆": {"n25": 0, "r25": 0, "n26": 0, "r26": 0, "avg25": 0, "avg26": 0}, "L馆": {"n25": 1, "r25": 114325.19, "n26": 5, "r26": 14528.0, "avg25": 114325.19, "avg26": 2905.6}}, "天津市": {"M馆": {"n25": 3, "r25": 198852.03, "n26": 4, "r26": 114123.98, "avg25": 66284.01, "avg26": 28530.99}, "L馆": {"n25": 0, "r25": 0, "n26": 3, "r26": 40666.32, "avg25": 0, "avg26": 13555.44}}, "宁波市": {"M馆": {"n25": 0, "r25": 0, "n26": 0, "r26": 0, "avg25": 0, "avg26": 0}, "L馆": {"n25": 3, "r25": 296518.82, "n26": 6, "r26": 68465.47, "avg25": 98839.61, "avg26": 11410.91}}, "广州市": {"M馆": {"n25": 8, "r25": 1356476.87, "n26": 8, "r26": 165272.35, "avg25": 169559.61, "avg26": 20659.04}, "L馆": {"n25": 8, "r25": 773098.73, "n26": 18, "r26": 425506.62, "avg25": 96637.34, "avg26": 23639.26}}, "成都市": {"M馆": {"n25": 0, "r25": 0, "n26": 0, "r26": 0, "avg25": 0, "avg26": 0}, "L馆": {"n25": 11, "r25": 679394.0, "n26": 16, "r26": 358446.15, "avg25": 61763.09, "avg26": 22402.88}}, "无锡市": {"M馆": {"n25": 1, "r25": 132917.14, "n26": 1, "r26": 29949.34, "avg25": 132917.14, "avg26": 29949.34}, "L馆": {"n25": 0, "r25": 0, "n26": 0, "r26": 0, "avg25": 0, "avg26": 0}}, "杭州市": {"M馆": {"n25": 67, "r25": 9587710.54, "n26": 75, "r26": 1840775.76, "avg25": 143100.16, "avg26": 24543.68}, "L馆": {"n25": 13, "r25": 1420166.81, "n26": 21, "r26": 300402.14, "avg25": 109243.6, "avg26": 14304.86}}, "武汉市": {"M馆": {"n25": 21, "r25": 3023731.32, "n26": 22, "r26": 614851.39, "avg25": 143987.21, "avg26": 27947.79}, "L馆": {"n25": 11, "r25": 890941.74, "n26": 12, "r26": 135336.52, "avg25": 80994.7, "avg26": 11278.04}}, "济南市": {"M馆": {"n25": 0, "r25": 0, "n26": 0, "r26": 0, "avg25": 0, "avg26": 0}, "L馆": {"n25": 1, "r25": 142162.91, "n26": 2, "r26": 14330.44, "avg25": 142162.91, "avg26": 7165.22}}, "深圳市": {"M馆": {"n25": 34, "r25": 5017529.65, "n26": 43, "r26": 1762419.47, "avg25": 147574.4, "avg26": 40986.5}, "L馆": {"n25": 11, "r25": 775653.17, "n26": 14, "r26": 347752.82, "avg25": 70513.92, "avg26": 24839.49}}, "苏州市": {"M馆": {"n25": 3, "r25": 444347.45, "n26": 6, "r26": 133904.69, "avg25": 148115.82, "avg26": 22317.45}, "L馆": {"n25": 8, "r25": 779270.03, "n26": 9, "r26": 140685.08, "avg25": 97408.75, "avg26": 15631.68}}, "西安市": {"M馆": {"n25": 0, "r25": 0, "n26": 0, "r26": 0, "avg25": 0, "avg26": 0}, "L馆": {"n25": 4, "r25": 249817.67, "n26": 6, "r26": 112810.58, "avg25": 62454.42, "avg26": 18801.76}}, "郑州市": {"M馆": {"n25": 0, "r25": 0, "n26": 0, "r26": 0, "avg25": 0, "avg26": 0}, "L馆": {"n25": 3, "r25": 337115.56, "n26": 10, "r26": 258137.28, "avg25": 112371.85, "avg26": 25813.73}}, "重庆市": {"M馆": {"n25": 1, "r25": 210915.17, "n26": 1, "r26": 49011.64, "avg25": 210915.17, "avg26": 49011.64}, "L馆": {"n25": 3, "r25": 127626.79, "n26": 3, "r26": 51501.26, "avg25": 42542.26, "avg26": 17167.09}}, "长沙市": {"M馆": {"n25": 3, "r25": 430170.6, "n26": 8, "r26": 242313.68, "avg25": 143390.2, "avg26": 30289.21}, "L馆": {"n25": 0, "r25": 0, "n26": 1, "r26": 11300.19, "avg25": 0, "avg26": 11300.19}}, "青岛市": {"M馆": {"n25": 1, "r25": 59249.75, "n26": 1, "r26": 6879.1, "avg25": 59249.75, "avg26": 6879.1}, "L馆": {"n25": 0, "r25": 0, "n26": 1, "r26": 1560.03, "avg25": 0, "avg26": 1560.03}}, "__全国__": {"M馆": {"n25": 265, "r25": 38451879.82, "n26": 303, "r26": 8608129.24, "avg25": 145101.43, "avg26": 28409.67}, "L馆": {"n25": 100, "r25": 8910513.7, "n26": 159, "r26": 2840607.52, "avg25": 89105.14, "avg26": 17865.46}}};
-let yoySortKey='cr', yoySortDir='desc';
+const YOY_DATA = {"上海市": {"M馆": {"ns": {"n25": 33, "avg25": 157637.06, "n26": 38, "avg26": 21698.88}, "lx": {"n25": 33, "avg25": 58314.76, "n26": 38, "avg26": 11886.04}, "fg": {"n25": 33, "avg25": 98009.65, "n26": 38, "avg26": 9480.52}}, "L馆": {"ns": {"n25": 9, "avg25": 108102.59, "n26": 15, "avg26": 18237.31}, "lx": {"n25": 9, "avg25": 65643.76, "n26": 15, "avg26": 12822.82}, "fg": {"n25": 9, "avg25": 42241.94, "n26": 15, "avg26": 5245.54}}}, "北京市": {"M馆": {"ns": {"n25": 63, "avg25": 152205.65, "n26": 68, "avg26": 32646.84}, "lx": {"n25": 63, "avg25": 55174.25, "n26": 68, "avg26": 16202.75}, "fg": {"n25": 63, "avg25": 95750.57, "n26": 68, "avg26": 16119.74}}, "L馆": {"ns": {"n25": 6, "avg25": 89682.18, "n26": 6, "avg26": 23423.93}, "lx": {"n25": 6, "avg25": 47169.8, "n26": 6, "avg26": 13095.08}, "fg": {"n25": 6, "avg25": 39453.08, "n26": 6, "avg26": 10109.47}}}, "南京市": {"M馆": {"ns": {"n25": 27, "avg25": 118481.5, "n26": 28, "avg26": 21574.47}, "lx": {"n25": 27, "avg25": 39082.0, "n26": 28, "avg26": 9081.63}, "fg": {"n25": 27, "avg25": 78856.3, "n26": 28, "avg26": 12351.23}}, "L馆": {"ns": {"n25": 8, "avg25": 101675.73, "n26": 11, "avg26": 13188.67}, "lx": {"n25": 8, "avg25": 52511.47, "n26": 11, "avg26": 6846.32}, "fg": {"n25": 8, "avg25": 48793.6, "n26": 11, "avg26": 6163.05}}}, "合肥市": {"M馆": {"ns": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "lx": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "fg": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}}, "L馆": {"ns": {"n25": 1, "avg25": 114325.19, "n26": 5, "avg26": 2905.6}, "lx": {"n25": 1, "avg25": 33123.19, "n26": 5, "avg26": 6343.09}, "fg": {"n25": 1, "avg25": 80741.2, "n26": 5, "avg26": -3520.53}}}, "天津市": {"M馆": {"ns": {"n25": 3, "avg25": 66284.01, "n26": 4, "avg26": 28530.99}, "lx": {"n25": 3, "avg25": 23521.79, "n26": 4, "avg26": 18337.95}, "fg": {"n25": 3, "avg25": 40561.3, "n26": 4, "avg26": 9852.92}}, "L馆": {"ns": {"n25": 0, "avg25": 0, "n26": 3, "avg26": 13555.44}, "lx": {"n25": 0, "avg25": 0, "n26": 3, "avg26": 7200.46}, "fg": {"n25": 0, "avg25": 0, "n26": 3, "avg26": 6203.12}}}, "宁波市": {"M馆": {"ns": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "lx": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "fg": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}}, "L馆": {"ns": {"n25": 3, "avg25": 98839.61, "n26": 6, "avg26": 11410.91}, "lx": {"n25": 3, "avg25": 65719.54, "n26": 6, "avg26": 9840.84}, "fg": {"n25": 3, "avg25": 32570.15, "n26": 6, "avg26": 1350.95}}}, "广州市": {"M馆": {"ns": {"n25": 8, "avg25": 169559.61, "n26": 8, "avg26": 20659.04}, "lx": {"n25": 8, "avg25": 39661.48, "n26": 8, "avg26": 7607.43}, "fg": {"n25": 8, "avg25": 129135.8, "n26": 8, "avg26": 12793.14}}, "L馆": {"ns": {"n25": 8, "avg25": 96637.34, "n26": 18, "avg26": 23639.26}, "lx": {"n25": 8, "avg25": 50005.02, "n26": 18, "avg26": 15052.13}, "fg": {"n25": 8, "avg25": 46019.82, "n26": 18, "avg26": 8309.92}}}, "成都市": {"M馆": {"ns": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "lx": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "fg": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}}, "L馆": {"ns": {"n25": 11, "avg25": 61763.09, "n26": 16, "avg26": 22402.88}, "lx": {"n25": 11, "avg25": 32405.72, "n26": 16, "avg26": 11594.28}, "fg": {"n25": 11, "avg25": 28827.81, "n26": 16, "avg26": 10609.51}}}, "无锡市": {"M馆": {"ns": {"n25": 1, "avg25": 132917.14, "n26": 1, "avg26": 29949.34}, "lx": {"n25": 1, "avg25": 65771.47, "n26": 1, "avg26": 22271.31}, "fg": {"n25": 1, "avg25": 65539.63, "n26": 1, "avg26": 7302.33}}, "L馆": {"ns": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "lx": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "fg": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}}}, "杭州市": {"M馆": {"ns": {"n25": 67, "avg25": 143100.16, "n26": 75, "avg26": 24543.68}, "lx": {"n25": 67, "avg25": 53806.11, "n26": 75, "avg26": 15028.47}, "fg": {"n25": 67, "avg25": 88548.28, "n26": 75, "avg26": 9262.34}}, "L馆": {"ns": {"n25": 13, "avg25": 109243.6, "n26": 21, "avg26": 14304.86}, "lx": {"n25": 13, "avg25": 47729.72, "n26": 21, "avg26": 8546.62}, "fg": {"n25": 13, "avg25": 61064.22, "n26": 21, "avg26": 5618.65}}}, "武汉市": {"M馆": {"ns": {"n25": 21, "avg25": 143987.21, "n26": 22, "avg26": 27947.79}, "lx": {"n25": 21, "avg25": 49733.4, "n26": 22, "avg26": 15583.73}, "fg": {"n25": 21, "avg25": 93146.46, "n26": 22, "avg26": 12036.41}}, "L馆": {"ns": {"n25": 11, "avg25": 80994.7, "n26": 12, "avg26": 11278.04}, "lx": {"n25": 11, "avg25": 38462.66, "n26": 12, "avg26": 7674.35}, "fg": {"n25": 11, "avg25": 42931.89, "n26": 12, "avg26": 3453.9}}}, "济南市": {"M馆": {"ns": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "lx": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "fg": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}}, "L馆": {"ns": {"n25": 1, "avg25": 142162.91, "n26": 2, "avg26": 7165.22}, "lx": {"n25": 1, "avg25": 37065.31, "n26": 2, "avg26": 1693.87}, "fg": {"n25": 1, "avg25": 104062.6, "n26": 2, "avg26": 5322.0}}}, "深圳市": {"M馆": {"ns": {"n25": 34, "avg25": 147574.4, "n26": 43, "avg26": 40986.5}, "lx": {"n25": 34, "avg25": 58343.18, "n26": 43, "avg26": 20516.31}, "fg": {"n25": 34, "avg25": 88108.07, "n26": 43, "avg26": 20076.78}}, "L馆": {"ns": {"n25": 11, "avg25": 70513.92, "n26": 14, "avg26": 24839.49}, "lx": {"n25": 11, "avg25": 37723.37, "n26": 14, "avg26": 12616.18}, "fg": {"n25": 11, "avg25": 32250.85, "n26": 14, "avg26": 12055.1}}}, "苏州市": {"M馆": {"ns": {"n25": 3, "avg25": 148115.82, "n26": 6, "avg26": 22317.45}, "lx": {"n25": 3, "avg25": 41499.66, "n26": 6, "avg26": 12913.74}, "fg": {"n25": 3, "avg25": 106090.58, "n26": 6, "avg26": 8996.57}}, "L馆": {"ns": {"n25": 8, "avg25": 97408.75, "n26": 9, "avg26": 15631.68}, "lx": {"n25": 8, "avg25": 30100.87, "n26": 9, "avg26": 8837.16}, "fg": {"n25": 8, "avg25": 66696.76, "n26": 9, "avg26": 6573.74}}}, "西安市": {"M馆": {"ns": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "lx": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "fg": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}}, "L馆": {"ns": {"n25": 4, "avg25": 62454.42, "n26": 6, "avg26": 18801.76}, "lx": {"n25": 4, "avg25": 41822.69, "n26": 6, "avg26": 10928.97}, "fg": {"n25": 4, "avg25": 19594.95, "n26": 6, "avg26": 7570.66}}}, "郑州市": {"M馆": {"ns": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "lx": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}, "fg": {"n25": 0, "avg25": 0, "n26": 0, "avg26": 0}}, "L馆": {"ns": {"n25": 3, "avg25": 112371.85, "n26": 10, "avg26": 25813.73}, "lx": {"n25": 3, "avg25": 53252.25, "n26": 10, "avg26": 16959.97}, "fg": {"n25": 3, "avg25": 58474.78, "n26": 10, "avg26": 8617.43}}}, "重庆市": {"M馆": {"ns": {"n25": 1, "avg25": 210915.17, "n26": 1, "avg26": 49011.64}, "lx": {"n25": 1, "avg25": 85171.06, "n26": 1, "avg26": 17636.33}, "fg": {"n25": 1, "avg25": 123988.93, "n26": 1, "avg26": 30852.0}}, "L馆": {"ns": {"n25": 3, "avg25": 42542.26, "n26": 3, "avg26": 17167.09}, "lx": {"n25": 3, "avg25": 31006.64, "n26": 3, "avg26": 8170.05}, "fg": {"n25": 3, "avg25": 10922.0, "n26": 3, "avg26": 8710.67}}}, "长沙市": {"M馆": {"ns": {"n25": 3, "avg25": 143390.2, "n26": 8, "avg26": 30289.21}, "lx": {"n25": 3, "avg25": 74768.7, "n26": 8, "avg26": 19299.58}, "fg": {"n25": 3, "avg25": 66386.94, "n26": 8, "avg26": 10476.04}}, "L馆": {"ns": {"n25": 0, "avg25": 0, "n26": 1, "avg26": 11300.19}, "lx": {"n25": 0, "avg25": 0, "n26": 1, "avg26": 209.51}, "fg": {"n25": 0, "avg25": 0, "n26": 1, "avg26": 10858.0}}}, "青岛市": {"M馆": {"ns": {"n25": 1, "avg25": 59249.75, "n26": 1, "avg26": 6879.1}, "lx": {"n25": 1, "avg25": 45329.26, "n26": 1, "avg26": 6280.0}, "fg": {"n25": 1, "avg25": 10675.0, "n26": 1, "avg26": 618.0}}, "L馆": {"ns": {"n25": 0, "avg25": 0, "n26": 1, "avg26": 1560.03}, "lx": {"n25": 0, "avg25": 0, "n26": 1, "avg26": -106.4}, "fg": {"n25": 0, "avg25": 0, "n26": 1, "avg26": 1651.0}}}, "__全国__": {"M馆": {"ns": {"n25": 265, "avg25": 145101.43, "n26": 303, "avg26": 28409.67}, "lx": {"n25": 265, "avg25": 52911.67, "n26": 303, "avg26": 15089.76}, "fg": {"n25": 265, "avg25": 91141.95, "n26": 303, "avg26": 13014.3}}, "L馆": {"ns": {"n25": 100, "avg25": 89105.14, "n26": 159, "avg26": 17865.46}, "lx": {"n25": 100, "avg25": 44371.62, "n26": 159, "avg26": 10729.17}, "fg": {"n25": 100, "avg25": 44160.13, "n26": 159, "avg26": 6942.35}}}};
+let yoySortKey='cr_ns', yoySortDir='desc';
+const yoyCats = {ns:true, lx:true, fg:true};
+
 function toggleYoySort(k){if(yoySortKey===k){yoySortDir=yoySortDir==='asc'?'desc':'asc';}else{yoySortKey=k;yoySortDir='desc';}renderYoy();}
+function toggleYoyCat(cat){yoyCats[cat]=!yoyCats[cat];renderYoy();}
 
 function renderYoy(){
   var cf=document.getElementById('yoyFilterCity').value;
@@ -1486,14 +1489,20 @@ function renderYoy(){
     Object.keys(YOY_DATA).filter(function(k){return k!=='__全国__';}).sort().forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;cs.appendChild(o);});
     if(cf)cs.value=cf;
   }
-  var rows=[];
   var cities=cf?[cf]:Object.keys(YOY_DATA).filter(function(k){return k!=='__全国__';});
+  var rows=[];
   cities.forEach(function(city){
     var gd=YOY_DATA[city]; if(!gd)return;
     var guans=gf?[gf]:['M馆','L馆'];
     guans.forEach(function(guan){
       var d=gd[guan]; if(!d)return;
-      rows.push({city:city,guan:guan,n25:d.n25,r25:d.r25,avg25:d.avg25,n26:d.n26,r26:d.r26,avg26:d.avg26,cr:d.avg25>0?(d.avg26/d.avg25):null});
+      var r={city:city,guan:guan};
+      ['ns','lx','fg'].forEach(function(k){
+        var v=d[k];
+        r['avg25_'+k]=v.avg25;r['avg26_'+k]=v.avg26;r['n25_'+k]=v.n25;r['n26_'+k]=v.n26;
+        r['cr_'+k]=v.avg25>0?(v.avg26/v.avg25):null;
+      });
+      rows.push(r);
     });
   });
   rows.sort(function(a,b){
@@ -1503,53 +1512,70 @@ function renderYoy(){
     if(typeof va==='string')return yoySortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
     return yoySortDir==='asc'?va-vb:vb-va;
   });
-  var tn25=0,tr25=0,tn26=0,tr26=0;
-  rows.forEach(function(r){tn25+=r.n25;tr25+=r.r25;tn26+=r.n26;tr26+=r.r26;});
-  var ta25=tn25>0?tr25/tn25:0, ta26=tn26>0?tr26/tn26:0, tcr=ta25>0?ta26/ta25:null;
+  var t={};
+  ['ns','lx','fg'].forEach(function(k){
+    var tn25=0,tn26=0,tr25=0,tr26=0;
+    rows.forEach(function(r){tn25+=r['n25_'+k];tn26+=r['n26_'+k];tr25+=r['n25_'+k]*r['avg25_'+k];tr26+=r['n26_'+k]*r['avg26_'+k];});
+    t['avg25_'+k]=tn25>0?tr25/tn25:0;t['avg26_'+k]=tn26>0?tr26/tn26:0;
+    t['cr_'+k]=t['avg25_'+k]>0?t['avg26_'+k]/t['avg25_'+k]:null;
+  });
   var arr=yoySortDir==='asc'?' ▲':' ▼';
-  var h='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;table-layout:fixed;min-width:780px">';
-  h+='<thead><tr style="background:#1a237e;color:#fff">';
-  var cols=[
-    {k:'city',l:'城市',w:'90px',a:'l'},
-    {k:'guan',l:'馆型',w:'60px',a:'l'},
-    {k:'n25',l:'25年8月<br>门店数',w:'72px',a:'r'},
-    {k:'avg25',l:'25年8月<br>店均(万)',w:'88px',a:'r'},
-    {k:'n26',l:'26年8月<br>门店数',w:'72px',a:'r'},
-    {k:'avg26',l:'26年8月<br>店均(万)',w:'88px',a:'r'},
-    {k:'cr',l:'完成率',w:'78px',a:'r'}
-  ];
-  cols.forEach(function(c){
-    var al=c.a==='l'?'text-align:left':'text-align:right';
-    var ar=yoySortKey===c.k?arr:'';
-    h+='<th style="cursor:pointer;user-select:none;white-space:nowrap;padding:10px 8px;font-size:12px;'+al+';width:'+c.w+'" onclick="toggleYoySort(\''+c.k+'\')">'+c.l+ar+'</th>';
+  var cc={ns:'#1a237e',lx:'#00838f',fg:'#6a1b9a'};
+  var cl={ns:'店均净收入同比',lx:'店均拉新同比',fg:'店均复购同比'};
+  var h='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;table-layout:fixed;min-width:1100px"><thead>';
+  h+='<tr>';
+  h+='<th colspan="2" rowspan="2" style="background:#1a237e;color:#fff;padding:8px;text-align:center;font-size:12px;border-right:2px solid rgba(255,255,255,0.4);vertical-align:middle">城市<br>馆型</th>';
+  ['ns','lx','fg'].forEach(function(k){
+    var col=yoyCats[k]?'3':'0';
+    var arrow=yoyCats[k]?'▼':'▶';
+    h+='<th colspan="'+col+'" style="background:'+cc[k]+';color:#fff;padding:6px 8px;text-align:center;font-size:12px;cursor:pointer;border-right:2px solid rgba(255,255,255,0.4)" onclick="toggleYoyCat(\''+k+'\')">';
+    h+=arrow+' '+cl[k]+'</th>';
+  });
+  h+='</tr>';
+  h+='<tr style="background:#1a237e;color:#fff">';
+  ['ns','lx','fg'].forEach(function(k){
+    if(!yoyCats[k])return;
+    [{key:'avg25_'+k,label:'25年店均(万)'},{key:'avg26_'+k,label:'26年店均(万)'},{key:'cr_'+k,label:'完成率'}].forEach(function(c){
+      var ar=yoySortKey===c.key?arr:'';
+      h+='<th style="cursor:pointer;user-select:none;padding:6px 8px;font-size:11px;text-align:right;white-space:nowrap" onclick="toggleYoySort(\''+c.key+'\')">'+c.label+ar+'</th>';
+    });
   });
   h+='</tr></thead><tbody>';
   rows.forEach(function(r,i){
     var bg=i%2===0?'#fff':'#f8f9fa';
     var gb=r.guan==='M馆'?'#d6e4f0':'#e2efda';
-    var cc=r.cr!==null?(r.cr>=0.8?'#16a34a':(r.cr>=0.5?'#f59e0b':'#dc2626')):'#94a3b8';
     h+='<tr style="background:'+bg+'">';
-    h+='<td style="text-align:left;padding:8px;font-size:13px;font-weight:500">'+r.city+'</td>';
-    h+='<td style="text-align:center;padding:8px;font-size:13px"><span style="background:'+gb+';padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500">'+r.guan+'</span></td>';
-    h+='<td style="text-align:right;padding:8px;font-size:13px">'+r.n25+'</td>';
-    h+='<td style="text-align:right;padding:8px;font-size:13px">'+(r.avg25/10000).toFixed(2)+'</td>';
-    h+='<td style="text-align:right;padding:8px;font-size:13px">'+r.n26+'</td>';
-    h+='<td style="text-align:right;padding:8px;font-size:13px">'+(r.avg26/10000).toFixed(2)+'</td>';
-    h+='<td style="text-align:right;padding:8px;font-size:13px;font-weight:600;color:'+cc+'">'+(r.cr!==null?(r.cr*100).toFixed(1)+'%':'-')+'</td>';
+    h+='<td style="text-align:left;padding:7px 8px;font-size:13px;font-weight:500;border-right:1px solid #eee">'+r.city+'</td>';
+    h+='<td style="text-align:center;padding:7px 8px;font-size:12px;border-right:2px solid #eee"><span style="background:'+gb+';padding:2px 6px;border-radius:4px;font-weight:500">'+r.guan+'</span></td>';
+    ['ns','lx','fg'].forEach(function(k){
+      if(!yoyCats[k])return;
+      var a25=(r['avg25_'+k]/10000).toFixed(2);
+      var a26=(r['avg26_'+k]/10000).toFixed(2);
+      var cr=r['cr_'+k];
+      var crc=cr!==null?(cr>=0.8?'#16a34a':(cr>=0.5?'#f59e0b':'#dc2626')):'#94a3b8';
+      h+='<td style="text-align:right;padding:7px 8px;font-size:13px">'+a25+'</td>';
+      h+='<td style="text-align:right;padding:7px 8px;font-size:13px">'+a26+'</td>';
+      h+='<td style="text-align:right;padding:7px 8px;font-size:13px;font-weight:600;color:'+crc+';border-right:2px solid rgba(0,0,0,0.06)">'+(cr!==null?(cr*100).toFixed(1)+'%':'-')+'</td>';
+    });
     h+='</tr>';
   });
-  var tc=tcr!==null?(tcr>=0.8?'#16a34a':(tcr>=0.5?'#f59e0b':'#dc2626')):'#94a3b8';
+  // Total
   h+='<tr style="background:#bbdefb;font-weight:700;position:sticky;bottom:0">';
-  h+='<td style="text-align:left;padding:8px;font-size:13px">合计</td>';
-  h+='<td style="text-align:center;padding:8px;font-size:13px">—</td>';
-  h+='<td style="text-align:right;padding:8px;font-size:13px">'+tn25+'</td>';
-  h+='<td style="text-align:right;padding:8px;font-size:13px">'+(ta25/10000).toFixed(2)+'</td>';
-  h+='<td style="text-align:right;padding:8px;font-size:13px">'+tn26+'</td>';
-  h+='<td style="text-align:right;padding:8px;font-size:13px">'+(ta26/10000).toFixed(2)+'</td>';
-  h+='<td style="text-align:right;padding:8px;font-size:13px;font-weight:700;color:'+tc+'">'+(tcr!==null?(tcr*100).toFixed(1)+'%':'-')+'</td>';
+  h+='<td style="text-align:left;padding:7px 8px;font-size:13px;border-right:1px solid #eee" colspan="1">合计</td>';
+  h+='<td style="text-align:center;padding:7px 8px;font-size:12px;border-right:2px solid #eee">—</td>';
+  ['ns','lx','fg'].forEach(function(k){
+    if(!yoyCats[k])return;
+    var a25=(t['avg25_'+k]/10000).toFixed(2);
+    var a26=(t['avg26_'+k]/10000).toFixed(2);
+    var cr=t['cr_'+k];
+    var crc=cr!==null?(cr>=0.8?'#16a34a':(cr>=0.5?'#f59e0b':'#dc2626')):'#94a3b8';
+    h+='<td style="text-align:right;padding:7px 8px;font-size:13px">'+a25+'</td>';
+    h+='<td style="text-align:right;padding:7px 8px;font-size:13px">'+a26+'</td>';
+    h+='<td style="text-align:right;padding:7px 8px;font-size:13px;font-weight:700;color:'+crc+';border-right:2px solid rgba(0,0,0,0.06)">'+(cr!==null?(cr*100).toFixed(1)+'%':'-')+'</td>';
+  });
   h+='</tr>';
   h+='</tbody></table></div>';
-  h+='<div style="margin-top:10px;font-size:12px;color:#94a3b8">说明：2026年数据截至8月12日（非全月），完成率=今年店均/去年店均。馆型按门店名称是否含"包月私教"划分。</div>';
+  h+='<div style="margin-top:10px;font-size:12px;color:#94a3b8">说明：2026年数据截至8月12日（非全月），完成率=今年店均/去年店均。点击分类标题可折叠/展开。</div>';
   document.getElementById('yoyContent').innerHTML=h;
 }
 

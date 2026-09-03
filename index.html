@@ -1223,7 +1223,7 @@ function getAvailableStatuses(){
   return ['营业中','待营业'];
 }
 
-var paceLevel='city'; var paceDay=null; var paceSortKey='rate'; var paceSortDir='desc';
+var paceLevel='city'; var paceDay=null; var paceSortKey='rate'; var paceSortDir='desc'; var paceCityFilter=''; var paceMgrFilter='';
 function paceToggleSort(key){
   if(paceSortKey===key){paceSortDir=paceSortDir==='asc'?'desc':'asc';}
   else{paceSortKey=key;paceSortDir='desc';}
@@ -1272,7 +1272,17 @@ function renderPace(){
   h+='<span style="font-size:13px;color:#666;margin-left:8px">节点日期：</span><select onchange="paceDay=this.value;renderPace()" style="padding:6px 10px;border-radius:8px;border:1px solid #d1d5db;font-size:13px">';
   days.forEach(function(d){h+='<option value="'+d+'"'+(d==cur?' selected':'')+'>'+d+'日</option>';});
   h+='</select>';
-  if(paceLevel==='store'){h+='<input id="paceSearch" placeholder="搜索门店名…" oninput="paceStoreFilter=this.value" style="padding:6px 12px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;margin-left:8px;width:180px">';}
+  if(paceLevel==='store'){
+    var cities=PACE_DATA.stores.map(function(t){return t.c;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+    var mgrs=PACE_DATA.stores.map(function(t){return t.m;}).filter(function(v,i,a){return a.indexOf(v)===i&&v&&v!=='(null)';}).sort();
+    h+='<select onchange="paceCityFilter=this.value;renderPace()" style="padding:6px 10px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;margin-left:8px"><option value="">全部城市</option>';
+    cities.forEach(function(c){h+='<option value="'+c+'"'+(paceCityFilter===c?' selected':'')+'>'+c+'</option>';});
+    h+='</select>';
+    h+='<select onchange="paceMgrFilter=this.value;renderPace()" style="padding:6px 10px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;margin-left:8px"><option value="">全部区经</option>';
+    mgrs.forEach(function(m){h+='<option value="'+m+'"'+(paceMgrFilter===m?' selected':'')+'>'+m+'</option>';});
+    h+='</select>';
+    h+='<input id="paceSearch" placeholder="搜索门店名…" oninput="paceStoreFilter=this.value" style="padding:6px 12px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;margin-left:8px;width:180px">';
+  }
   h+='</div>';
   // table
   var rows=[];
@@ -1294,6 +1304,8 @@ function renderPace(){
     var kw=(typeof paceStoreFilter!=='undefined'?paceStoreFilter:'').trim();
     PACE_DATA.stores.forEach(function(t){
       if(kw&&t.n.indexOf(kw)===-1)return;
+      if(paceCityFilter&&t.c!==paceCityFilter)return;
+      if(paceMgrFilter&&t.m!==paceMgrFilter)return;
       var cum=0; days.forEach(function(d){if(d<=cur)cum+=(t.d[d]||0);});
       var act=actStore[t.n]||0;var dt=t.d[cur]||0;
       rows.push({name:t.n,m:t.m52,dayT:dt,cum:cum,act:act,rate:cum>0?act/cum*100:0,extra:t.c+' · '+t.t+' · '+t.st});

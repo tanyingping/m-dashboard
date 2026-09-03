@@ -1223,7 +1223,12 @@ function getAvailableStatuses(){
   return ['营业中','待营业'];
 }
 
-var paceLevel='city'; var paceDay=null;
+var paceLevel='city'; var paceDay=null; var paceSortKey='rate'; var paceSortDir='desc';
+function paceToggleSort(key){
+  if(paceSortKey===key){paceSortDir=paceSortDir==='asc'?'desc':'asc';}
+  else{paceSortKey=key;paceSortDir='desc';}
+  renderPace();
+}
 function renderPace(){
   var panel=document.getElementById('paceContent');
   if(!panel)return;
@@ -1275,34 +1280,48 @@ function renderPace(){
     Object.keys(PACE_DATA.city).forEach(function(c){
       var t=PACE_DATA.city[c];
       var cum=0; days.forEach(function(d){if(d<=cur)cum+=(t.d[d]||0);});
-      var act=actCity[c]||0;
-      rows.push({name:c,m:t.m,cum:cum,act:act,rate:cum>0?act/cum*100:0,extra:''});
+      var act=actCity[c]||0;var dt=t.d[cur]||0;
+      rows.push({name:c,m:t.m,dayT:dt,cum:cum,act:act,rate:cum>0?act/cum*100:0,extra:''});
     });
   }else if(paceLevel==='mgr'){
     Object.keys(PACE_DATA.mgr).forEach(function(mm){
       var t=PACE_DATA.mgr[mm];
       var cum=0; days.forEach(function(d){if(d<=cur)cum+=(t.d[d]||0);});
-      var act=actMgr[mm]||0;
-      rows.push({name:mm,m:t.m,cum:cum,act:act,rate:cum>0?act/cum*100:0,extra:''});
+      var act=actMgr[mm]||0;var dt=t.d[cur]||0;
+      rows.push({name:mm,m:t.m,dayT:dt,cum:cum,act:act,rate:cum>0?act/cum*100:0,extra:''});
     });
   }else{
     var kw=(typeof paceStoreFilter!=='undefined'?paceStoreFilter:'').trim();
     PACE_DATA.stores.forEach(function(t){
       if(kw&&t.n.indexOf(kw)===-1)return;
       var cum=0; days.forEach(function(d){if(d<=cur)cum+=(t.d[d]||0);});
-      var act=actStore[t.n]||0;
-      rows.push({name:t.n,m:t.m52,cum:cum,act:act,rate:cum>0?act/cum*100:0,extra:t.c+' · '+t.t+' · '+t.st});
+      var act=actStore[t.n]||0;var dt=t.d[cur]||0;
+      rows.push({name:t.n,m:t.m52,dayT:dt,cum:cum,act:act,rate:cum>0?act/cum*100:0,extra:t.c+' · '+t.t+' · '+t.st});
     });
   }
-  rows.sort(function(a,b){return b.rate-a.rate;});
+  var dir=paceSortDir==='asc'?1:-1;
+  rows.sort(function(a,b){
+    var va,vb;
+    if(paceSortKey==='name'){return paceSortDir==='asc'?a.name.localeCompare(b.name,'zh'):b.name.localeCompare(a.name,'zh');}
+    if(paceSortKey==='m'){va=a.m;vb=b.m;}
+    else if(paceSortKey==='day'){va=a.dayT;vb=b.dayT;}
+    else if(paceSortKey==='cum'){va=a.cum;vb=b.cum;}
+    else if(paceSortKey==='act'){va=a.act;vb=b.act;}
+    else if(paceSortKey==='diff'){va=a.act-a.cum;vb=b.act-b.cum;}
+    else{va=a.rate;vb=b.rate;}
+    return (va-vb)*dir;
+  });
   h+='<div style="background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.08);overflow:auto;max-height:65vh">';
   h+='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#1a237e;color:#fff;position:sticky;top:0">';
-  h+='<th style="padding:10px;text-align:left">名称</th><th style="padding:10px">月目标(万)</th><th style="padding:10px">当日目标(万)</th><th style="padding:10px">累计目标(万)</th><th style="padding:10px">累计实际(万)</th><th style="padding:10px">节点达成率</th><th style="padding:10px">差额(万)</th></tr></thead><tbody>';
+    var thDef=[['name','名称'],['m','月目标(万)'],['day','当日目标(万)'],['cum','累计目标(万)'],['act','累计实际(万)'],['rate','节点达成率'],['diff','差额(万)']];
+  thDef.forEach(function(td){
+    var arrow=paceSortKey===td[0]?(paceSortDir==='asc'?' ▲':' ▼'):'';
+    var active=paceSortKey===td[0]?'text-decoration:underline;':'';
+    h+='<th onclick="paceToggleSort(\''+td[0]+'\')" style="padding:10px;cursor:pointer;user-select:none;'+active+(td[0]==='name'?'text-align:left;':'')+'">'+td[1]+arrow+'</th>';
+  });
+  h+='</tr></thead><tbody>';
   rows.forEach(function(r,i){
-    var dayT=0;
-    if(paceLevel==='city')dayT=PACE_DATA.city[r.name].d[cur]||0;
-    else if(paceLevel==='mgr')dayT=PACE_DATA.mgr[r.name].d[cur]||0;
-    else{PACE_DATA.stores.forEach(function(t){if(t.n===r.name)dayT=t.d[cur]||0;});}
+    var dayT=r.dayT||0;
     var ok=r.rate>=100;
     var bg=i%2===0?'#fff':'#f8fafc';
     h+='<tr style="background:'+bg+';border-bottom:1px solid #eef2f7">';

@@ -286,7 +286,7 @@ function buildFilteredData(filter) {
     拉新完成率:s.lx_pt?Math.round(s.lx_ns/s.lx_pt*1000)/10:0,
     复购完成率:s.fg_pt?Math.round(s.fg_ns/s.fg_pt*1000)/10:0,
     退款率:(s.refund+s.ns)>0?Math.round(s.refund/(s.refund+s.ns)*1000)/10:0,
-    复购率:s.expire_30?Math.round(s.rebuy_30/s.expire_30*1000)/10:0,复购率31_60:(s.expire_60-s.expire_30)?Math.round((s.rebuy_60-s.rebuy_30)/(s.expire_60-s.expire_30)*1000)/10:0,31_60到期用户数:s.expire_60-s.expire_30,
+    复购率:s.expire_30?Math.round(s.rebuy_30/s.expire_30*1000)/10:0,复购率31_60:(s.expire_60-s.expire_30)?Math.round((s.rebuy_60-s.rebuy_30)/(s.expire_60-s.expire_30)*1000)/10:0,"31_60到期用户数":s.expire_60-s.expire_30,
     店均净收入:Math.round(s.ns), 复购店均净收入:s.fg_ns>0?Math.round(s.fg_ns):0,
     拉新店均净收入:s.lx_ns>0?Math.round(s.lx_ns):0,
     店均拉新:s.lx_users, 拉新客单价:s.lx_users?Math.round(s.lx_gmv/s.lx_users):0,

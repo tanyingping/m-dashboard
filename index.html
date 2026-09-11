@@ -200,7 +200,7 @@ function filterStores(filter) {
 }
 
 function aggStores(stores) {
-  if (stores.length === 0) return {store_count:0,"业绩目标":0,"净销售额":0,"拉新目标":0,"拉新净销售额":0,"复购目标":0,"复购净销售额":0,"会员卡店均净收入":0,"会员卡店均拉新净收入":0,"会员卡店均复购净收入":0,"退款GMV":0,"拉新用户数":0,"私教拉新GMV":0,"私教复购支付用户数":0,"私教复购GMV":0,"包月私教0-30天到期用户数":0,"包月私教0-30天到期用户复购数":0,"包月私教0-60天到期用户数":0,"包月私教0-60天到期用户复购数":0,"私教体验课订单数":0,"私教体验课派单数":0,"私教体验课上课数":0,"私教体验课转化数":0,"包月私教正式用户数":0,"业绩完成率":0,"拉新完成率":0,"复购完成率":0,"复购目标占比":0,"退款率":0,"复购率":0,"到期用户数":0,"已复购数":0,"店均拉新":0,"店均净收入":0,"复购店均净收入":0,"拉新店均净收入":0,"拉新客单价":0,"复购客单价":null,"店均体验课":0,"派单率":0,"上课率":0,"转化率":0,"体验课下单转化率":0,"消课转化率":0,"体验课转化率":0,"包月正式用户数":0,"人力成本占比":0,"教练比":0,"当月拉新用户数":0,"当月拉新复购率":0,"盘点率_30":0,"盘点金额_30":0,"预估复购率_30":0,"咬合度_30":0,"盘点率_90":0,"盘点金额_90":0,"预估复购率_90":0,"咬合度_90":0,"连续包季人数":0,"连续包季复购率":0,"0-30天连续包季人数":0,"0-30天连续包季复购率":0,"体验课订单数":0};
+  if (stores.length === 0) return {store_count:0,"业绩目标":0,"净销售额":0,"拉新目标":0,"拉新净销售额":0,"复购目标":0,"复购净销售额":0,"会员卡店均净收入":0,"会员卡店均拉新净收入":0,"会员卡店均复购净收入":0,"退款GMV":0,"拉新用户数":0,"私教拉新GMV":0,"私教复购支付用户数":0,"私教复购GMV":0,"包月私教0-30天到期用户数":0,"包月私教0-30天到期用户复购数":0,"包月私教0-60天到期用户数":0,"包月私教0-60天到期用户复购数":0,"私教体验课订单数":0,"私教体验课派单数":0,"私教体验课上课数":0,"私教体验课转化数":0,"包月私教正式用户数":0,"业绩完成率":0,"拉新完成率":0,"复购完成率":0,"复购目标占比":0,"退款率":0,"复购率":0,"到期用户数":0,"已复购数":0,"店均拉新":0,"店均净收入":0,"复购店均净收入":0,"拉新店均净收入":0,"拉新客单价":0,"复购客单价":null,"店均体验课":0,"派单率":0,"上课率":0,"转化率":0,"体验课下单转化率":0,"消课转化率":0,"体验课转化率":0,"包月正式用户数":0,"人力成本占比":0,"教练比":0,"当月拉新用户数":0,"当月拉新复购率":0,"复购率31_60":0,"31-60到期用户数":0,"31-60已复购数":0,"盘点率_30":0,"盘点金额_30":0,"预估复购率_30":0,"咬合度_30":0,"盘点率_90":0,"盘点金额_90":0,"预估复购率_90":0,"咬合度_90":0,"连续包季人数":0,"连续包季复购率":0,"0-30天连续包季人数":0,"0-30天连续包季复购率":0,"体验课订单数":0};
   const S = (k) => stores.reduce((a,s) => a + (s[k]||0), 0);
   const pt=S('pt'),ns=S('ns'),lx_pt=S('lx_pt'),lx_ns=S('lx_ns'),fg_pt=S('fg_pt'),fg_ns=S('fg_ns'),refund=S('refund'),lx_users=S('lx_users'),lx_gmv=S('lx_gmv'),fg_users=S('fg_users'),fg_gmv=S('fg_gmv'),expire_30=S('expire_30'),rebuy_30=S('rebuy_30'),expire_60=S('expire_60'),rebuy_60=S('rebuy_60'),exp_orders=S('exp_orders'),exp_dispatch=S('exp_dispatch'),exp_class=S('exp_class'),exp_convert=S('exp_convert'),exp_class_convert=S('exp_class_convert'),monthly_users=S('monthly_users'),lx_new=S('lx_new'),lx_new_rebuy=S('lx_new_rebuy'),mk_ns=S('mk_ns'),mk_lx_ns=S('mk_lx_ns'),mk_fg_ns=S('mk_fg_ns');
   const n=stores.length;
@@ -224,6 +224,7 @@ function aggStores(stores) {
     "退款率": (refund+ns)>0?Math.round(refund/(refund+ns)*1000)/10:0,
     "复购率": expire_30?Math.round(rebuy_30/expire_30*1000)/10:0,
     "到期用户数": expire_30, "已复购数": rebuy_30,
+    "复购率31_60": (expire_60-expire_30)?Math.round((rebuy_60-rebuy_30)/(expire_60-expire_30)*1000)/10:0, "31-60到期用户数": expire_60-expire_30, "31-60已复购数": rebuy_60-rebuy_30,
     "店均拉新": Math.round(lx_users/n*10)/10, "店均净收入": Math.round(ns/n),
     "复购店均净收入": rebuyStores.length?Math.round(rebuyStores.reduce((a,s)=>a+s.fg_ns,0)/rebuyStores.length):0,
     "拉新店均净收入": lxStores.length?Math.round(lxStores.reduce((a,s)=>a+s.lx_ns,0)/lxStores.length):0,
@@ -285,7 +286,7 @@ function buildFilteredData(filter) {
     拉新完成率:s.lx_pt?Math.round(s.lx_ns/s.lx_pt*1000)/10:0,
     复购完成率:s.fg_pt?Math.round(s.fg_ns/s.fg_pt*1000)/10:0,
     退款率:(s.refund+s.ns)>0?Math.round(s.refund/(s.refund+s.ns)*1000)/10:0,
-    复购率:s.expire_30?Math.round(s.rebuy_30/s.expire_30*1000)/10:0,
+    复购率:s.expire_30?Math.round(s.rebuy_30/s.expire_30*1000)/10:0,复购率31_60:(s.expire_60-s.expire_30)?Math.round((s.rebuy_60-s.rebuy_30)/(s.expire_60-s.expire_30)*1000)/10:0,31_60到期用户数:s.expire_60-s.expire_30,
     店均净收入:Math.round(s.ns), 复购店均净收入:s.fg_ns>0?Math.round(s.fg_ns):0,
     拉新店均净收入:s.lx_ns>0?Math.round(s.lx_ns):0,
     店均拉新:s.lx_users, 拉新客单价:s.lx_users?Math.round(s.lx_gmv/s.lx_users):0,
@@ -520,7 +521,7 @@ function buildTable(items, cols, categories, sk, sd, toggleFn, totalStores, getV
     if(col.key==='复购客单价'){html+=`<td${hideStyle}>${nat.复购客单价!=null?'¥'+nat.复购客单价:'-'}</td>`;return;}
     if(col.key==='盘点金额_30'){html+=`<td${hideStyle}>${(nat.盘点金额_30/10000).toFixed(1)}万</td>`;return;}
     if(col.key==='盘点金额_90'){html+=`<td${hideStyle}>${(nat.盘点金额_90/10000).toFixed(1)}万</td>`;return;}
-    const natMap={'业绩完成率':nat.业绩完成率,'拉新完成率':nat.拉新完成率,'复购完成率':nat.复购完成率,'退款率':nat.退款率,'店均拉新':nat.店均拉新,'复购率':nat.复购率,'上课率':nat.上课率,'体验课下单转化率':nat.体验课下单转化率,'消课转化率':nat.消课转化率,'拉新客单价':nat.拉新客单价,'人力成本占比':nat.人力成本占比,'教练比':nat.教练比,'店均净收入':nat.店均净收入,'复购店均净收入':nat.复购店均净收入,'拉新店均净收入':nat.拉新店均净收入,'盘点率_30':nat.盘点率_30,'预估复购率_30':nat.预估复购率_30,'咬合度_30':nat.咬合度_30,'盘点率_90':nat.盘点率_90,'预估复购率_90':nat.预估复购率_90,'咬合度_90':nat.咬合度_90,'复购目标占比':nat.复购目标占比,'当月拉新用户数':nat.当月拉新用户数,'当月拉新复购率':nat.当月拉新复购率,'店均体验课':nat.店均体验课,'业绩目标':(nat.业绩目标/10000).toFixed(1)+'万','净销售额':(nat.净销售额/10000).toFixed(1)+'万','拉新目标':(nat.拉新目标/10000).toFixed(1)+'万','拉新净销售额':(nat.拉新净销售额/10000).toFixed(1)+'万','复购目标':(nat.复购目标/10000).toFixed(1)+'万','复购净销售额':(nat.复购净销售额/10000).toFixed(1)+'万','会员卡店均净收入':nat.会员卡店均净收入,'会员卡店均拉新净收入':nat.会员卡店均拉新净收入,'会员卡店均复购净收入':nat.会员卡店均复购净收入,'退款GMV':(nat.退款GMV/10000).toFixed(1)+'万','拉新用户数':nat.拉新用户数,'到期用户数':nat.到期用户数,'已复购数':nat.已复购数,'包月正式用户数':nat.包月正式用户数,'体验课订单数':nat.体验课订单数};
+    const natMap={'业绩完成率':nat.业绩完成率,'拉新完成率':nat.拉新完成率,'复购完成率':nat.复购完成率,'退款率':nat.退款率,'店均拉新':nat.店均拉新,'复购率':nat.复购率,'上课率':nat.上课率,'体验课下单转化率':nat.体验课下单转化率,'消课转化率':nat.消课转化率,'拉新客单价':nat.拉新客单价,'人力成本占比':nat.人力成本占比,'教练比':nat.教练比,'店均净收入':nat.店均净收入,'复购店均净收入':nat.复购店均净收入,'拉新店均净收入':nat.拉新店均净收入,'盘点率_30':nat.盘点率_30,'预估复购率_30':nat.预估复购率_30,'咬合度_30':nat.咬合度_30,'盘点率_90':nat.盘点率_90,'预估复购率_90':nat.预估复购率_90,'咬合度_90':nat.咬合度_90,'复购目标占比':nat.复购目标占比,'当月拉新用户数':nat.当月拉新用户数,'当月拉新复购率':nat.当月拉新复购率,'复购率31_60':nat.复购率31_60,'店均体验课':nat.店均体验课,'业绩目标':(nat.业绩目标/10000).toFixed(1)+'万','净销售额':(nat.净销售额/10000).toFixed(1)+'万','拉新目标':(nat.拉新目标/10000).toFixed(1)+'万','拉新净销售额':(nat.拉新净销售额/10000).toFixed(1)+'万','复购目标':(nat.复购目标/10000).toFixed(1)+'万','复购净销售额':(nat.复购净销售额/10000).toFixed(1)+'万','会员卡店均净收入':nat.会员卡店均净收入,'会员卡店均拉新净收入':nat.会员卡店均拉新净收入,'会员卡店均复购净收入':nat.会员卡店均复购净收入,'退款GMV':(nat.退款GMV/10000).toFixed(1)+'万','拉新用户数':nat.拉新用户数,'到期用户数':nat.到期用户数,'已复购数':nat.已复购数,'包月正式用户数':nat.包月正式用户数,'体验课订单数':nat.体验课订单数};
     if(natMap[col.key]!==undefined){html+=`<td${hideStyle}>${(col.prefix||'')+natMap[col.key]+(col.suffix||'')}</td>`;return;}
     const vals=items.map(c=>c[col.key]).filter(v=>typeof v==='number');
     const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—';
@@ -564,7 +565,7 @@ const commonMetricCols = [
   {key:'退款率',label:'退款率',sortable:true,suffix:'%',bench:nat.退款率,lower:false},
   {key:'复购目标占比',label:'复购目标占比',sortable:true,suffix:'%',bench:nat.复购目标占比},
   {key:'复购完成率',label:'复购完成率',sortable:true,suffix:'%',bench:nat.复购完成率,lower:true},
-  {key:'到期用户数',label:'0-30天到期用户数',sortable:true,suffix:'人'},{key:'复购率',label:'0-30天复购率',sortable:true,suffix:'%',bench:nat.复购率,lower:true},
+  {key:'到期用户数',label:'0-30天到期用户数',sortable:true,suffix:'人'},{key:'复购率',label:'0-30天复购率',sortable:true,suffix:'%',bench:nat.复购率,lower:true},{key:'复购率31_60',label:'31-60天复购率',sortable:true,suffix:'%',bench:nat.复购率31_60,lower:true},
   {key:'复购店均净收入',label:'复购店均净收入',sortable:true,prefix:'¥'},
   {key:'复购客单价',label:'复购客单价',sortable:true,render:c=>c.复购客单价!=null?'¥'+c.复购客单价:'<span style="color:#999">-</span>'},
   {key:'会员卡店均净收入',label:'会员卡店均净收入',sortable:true,prefix:'¥'},

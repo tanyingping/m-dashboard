@@ -168,6 +168,8 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
         <select id="storeFilterMgr" onchange="renderStores()" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px"></select>
         <label style="font-size:13px;color:#5f6368;margin-left:8px">标签：</label>
         <select id="storeFilterLabel" onchange="renderStores()" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;min-width:120px"></select>
+        <button id="storeExportBtn" onclick="exportStoresCSV()" title="按当前城市/区经/标签及类型/营业状态筛选结果导出 CSV（原始数值，Excel可直接排序求和）" style="margin-left:16px;padding:6px 14px;background:#1a237e;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">导出当前筛选 CSV</button>
+        <span id="storeExportHint" style="font-size:12px;color:#5f6368;margin-left:6px"></span>
       </div>
       <div id="storeTableArea"></div>
     </div>
@@ -740,6 +742,62 @@ function renderStores(){
   const info='<div style="font-size:13px;color:#5f6368;margin-bottom:8px">共 '+filtered.length+' 家门店'+(fc!=='全部'?' | '+fc:'')+(fm!=='全部'?' | 区经:'+fm:'')+(fl!=='全部'?' | 标签:'+fl:'')+'</div>';
   tableArea.innerHTML=info+buildTable(filtered,storeCols,storeCats,storeSortKey,storeSortDir,'toggleStoreSort',data.total_stores,gv,'store');
   document.getElementById('storesPanel').className='fade-in';
+  // 更新导出按钮旁的提示：显示将要导出的门店数
+  try{
+    var hint=document.getElementById('storeExportHint');
+    if(hint) hint.textContent='将导出 '+filtered.length+' 家门店';
+  }catch(e){}
+}
+
+// === 门店明细：按当前筛选导出 CSV（所见即所得，零依赖） ===
+function exportStoresCSV(){
+  var data = buildFilteredData(storeFilter);
+  nat = data.national;
+  var fcEl=document.getElementById('storeFilterCity'), fmEl=document.getElementById('storeFilterMgr'), flEl=document.getElementById('storeFilterLabel');
+  if(!fcEl||!fmEl||!flEl){alert('未找到筛选控件');return;}
+  var fc=fcEl.value, fm=fmEl.value, fl=flEl.value;
+  var filtered=data.stores.filter(function(s){
+    if(fc!=='全部'&&s.city!==fc)return false;
+    if(fm!=='全部'&&s.manager!==fm)return false;
+    if(fl!=='全部'&&!(s.labels&&s.labels.indexOf(fl)>=0))return false;
+    return true;
+  });
+  if(filtered.length===0){alert('当前筛选无门店可导出');return;}
+  // 单元格取值：直接读底层字段(gv已处理店均体验课特例)，输出原始数值/字符串，Excel可直接计算
+  function cell(row,col){
+    var v;
+    try{ v=(typeof gv==='function')?gv(row,col.key):row[col.key]; }catch(e){ v=row[col.key]; }
+    if(v===null||v===undefined||v==='')return '';
+    if(typeof v==='number'){
+      // 保留4位小数，避免浮点尾巴
+      return String(Math.round(v*10000)/10000);
+    }
+    return String(v);
+  }
+  function esc(s){
+    s=String(s==null?'':s);
+    if(/[",\r\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+    return s;
+  }
+  var header=storeCols.map(function(c){return esc(c.label);}).join(',');
+  var rows=filtered.map(function(r){return storeCols.map(function(c){return esc(cell(r,c));}).join(',');});
+  var csv='\uFEFF'+header+'\r\n'+rows.join('\r\n')+'\r\n';
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var dateStr='';
+  try{
+    var d=(document.getElementById('dateDisplay').textContent||'').match(/(\d{4}-\d{2}-\d{2})/);
+    if(d)dateStr='_'+d[1];
+  }catch(e){}
+  var parts=[];
+  if(fm&&fm!=='全部')parts.push('区经_'+fm);
+  else if(fc&&fc!=='全部')parts.push('城市_'+fc);
+  if(fl&&fl!=='全部')parts.push('标签_'+fl);
+  var fname='门店明细'+(parts.length?'_'+parts.join('_'):'')+dateStr+'.csv';
+  var a=document.createElement('a');
+  a.href=url; a.download=fname;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){try{document.body.removeChild(a);}catch(e){}try{URL.revokeObjectURL(url);}catch(e){}},200);
 }
 
 function renderDetail(name){

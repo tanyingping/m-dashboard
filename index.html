@@ -152,10 +152,6 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
       <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">全国对比</button>
       <button class="tab-btn" data-tab="manager" onclick="switchTab('manager')">区经对比</button>
       <button class="tab-btn" data-tab="stores" onclick="switchTab('stores')">门店明细</button>
-      <button class="tab-btn" data-tab="regionpk" onclick="switchTab('regionpk')">赛区PK</button>
-      <button class="tab-btn" data-tab="dqz" onclick="switchTab('dqz')">大区总对比</button>
-
-      <button class="tab-btn" data-tab="daily" onclick="switchTab('daily')">日增对比</button>
     </div>
     <div id="overviewPanel" class="fade-in"><div id="ovFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="ovContent"></div></div>
     <div id="managerPanel" class="detail"><div id="mgrFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="mgrContent"></div></div>
@@ -201,7 +197,7 @@ function filterStores(filter) {
 }
 
 function aggStores(stores) {
-  if (stores.length === 0) return {store_count:0,"业绩目标":0,"净销售额":0,"拉新目标":0,"拉新净销售额":0,"复购目标":0,"复购净销售额":0,"会员卡店均净收入":0,"会员卡店均拉新净收入":0,"会员卡店均复购净收入":0,"退款GMV":0,"拉新用户数":0,"私教拉新GMV":0,"私教复购支付用户数":0,"私教复购GMV":0,"包月私教0-30天到期用户数":0,"包月私教0-30天到期用户复购数":0,"包月私教0-60天到期用户数":0,"包月私教0-60天到期用户复购数":0,"私教体验课订单数":0,"私教体验课派单数":0,"私教体验课上课数":0,"私教体验课转化数":0,"包月私教正式用户数":0,"业绩完成率":0,"拉新完成率":0,"复购完成率":0,"复购目标占比":0,"退款率":0,"复购率":0,"到期用户数":0,"已复购数":0,"店均拉新":0,"店均净收入":0,"复购店均净收入":0,"拉新店均净收入":0,"拉新客单价":0,"复购客单价":null,"店均体验课":0,"派单率":0,"上课率":0,"转化率":0,"体验课下单转化率":0,"消课转化率":0,"体验课转化率":0,"包月正式用户数":0,"人力成本占比":0,"教练比":0,"当月拉新用户数":0,"当月拉新复购率":0,"复购率31_60":0,"31-60到期用户数":0,"31-60已复购数":0,"连续包季人数":0,"连续包季复购率":0,"0-30天连续包季人数":0,"0-30天连续包季复购率":0,"体验课订单数":0};
+  if (stores.length === 0) return {store_count:0,"业绩目标":0,"净销售额":0,"拉新目标":0,"拉新净销售额":0,"复购目标":0,"复购净销售额":0,"会员卡店均净收入":0,"会员卡店均拉新净收入":0,"会员卡店均复购净收入":0,"退款GMV":0,"拉新用户数":0,"私教拉新GMV":0,"私教复购支付用户数":0,"私教复购GMV":0,"包月私教0-30天到期用户数":0,"包月私教0-30天到期用户复购数":0,"包月私教0-60天到期用户数":0,"包月私教0-60天到期用户复购数":0,"私教体验课订单数":0,"私教体验课派单数":0,"私教体验课上课数":0,"私教体验课转化数":0,"包月私教正式用户数":0,"业绩完成率":0,"拉新完成率":0,"复购完成率":0,"复购目标占比":0,"退款率":0,"复购率":0,"到期用户数":0,"已复购数":0,"店均拉新":0,"店均净收入":0,"复购店均净收入":0,"拉新店均净收入":0,"拉新客单价":0,"复购客单价":null,"店均体验课":0,"派单率":0,"上课率":0,"转化率":0,"体验课下单转化率":0,"消课转化率":0,"体验课转化率":0,"包月正式用户数":0,"人力成本占比":0,"教练比":0,"当月拉新用户数":0,"当月拉新复购率":0,"复购率31_60":0,"31-60到期用户数":0,"31-60已复购数":0,"体验课订单数":0};
   const S = (k) => stores.reduce((a,s) => a + (s[k]||0), 0);
   const pt=S('pt'),ns=S('ns'),lx_pt=S('lx_pt'),lx_ns=S('lx_ns'),fg_pt=S('fg_pt'),fg_ns=S('fg_ns'),refund=S('refund'),lx_users=S('lx_users'),lx_gmv=S('lx_gmv'),fg_users=S('fg_users'),fg_gmv=S('fg_gmv'),expire_30=S('expire_30'),rebuy_30=S('rebuy_30'),expire_60=S('expire_60'),rebuy_60=S('rebuy_60'),exp_orders=S('exp_orders'),exp_dispatch=S('exp_dispatch'),exp_class=S('exp_class'),exp_convert=S('exp_convert'),exp_class_convert=S('exp_class_convert'),monthly_users=S('monthly_users'),lx_new=S('lx_new'),lx_new_rebuy=S('lx_new_rebuy'),mk_ns=S('mk_ns'),mk_lx_ns=S('mk_lx_ns'),mk_fg_ns=S('mk_fg_ns');
   const n=stores.length;
@@ -243,10 +239,6 @@ function aggStores(stores) {
     "教练比": Math.round(stores.reduce((a,s)=>a+s.coach_ratio,0)/n*10)/10,
     "当月拉新用户数": lx_new,
     "当月拉新复购率": lx_new?Math.round(lx_new_rebuy/lx_new*1000)/10:0,
-    "连续包季人数": stores.reduce((a,s)=>a+(s.ljbj_total||0),0),
-    "连续包季复购率": (function(){var t=stores.reduce((a,s)=>a+(s.ljbj_total||0),0);var r=stores.reduce((a,s)=>a+(s.ljbj_rebuy||0),0);return t?Math.round(r/t*1000)/10:0})(),
-    "0-30天连续包季人数": stores.reduce((a,s)=>a+(s.ljbj_30_total||0),0),
-    "0-30天连续包季复购率": (function(){var t=stores.reduce((a,s)=>a+(s.ljbj_30_total||0),0);var r=stores.reduce((a,s)=>a+(s.ljbj_30_rebuy||0),0);return t?Math.round(r/t*1000)/10:0})(),
   };
 }
 
@@ -301,10 +293,6 @@ function buildFilteredData(filter) {
     "包月私教0-30天到期用户数":s.expire_30, "包月私教0-30天到期用户复购数":s.rebuy_30,
     私教体验课订单数:s.exp_orders, 私教体验课派单数:s.exp_dispatch,
     私教体验课上课数:s.exp_class, 私教体验课转化数:s.exp_convert,
-    "连续包季人数":s.ljbj_total||0,
-    "连续包季复购率":s.ljbj_total?Math.round((s.ljbj_rebuy||0)/s.ljbj_total*1000)/10:0,
-    "0-30天连续包季人数":s.ljbj_30_total||0,
-    "0-30天连续包季复购率":s.ljbj_30_total?Math.round((s.ljbj_30_rebuy||0)/s.ljbj_30_total*1000)/10:0,
     lx_new:s.lx_new||0, lx_new_rebuy:s.lx_new_rebuy||0,
     "当月拉新用户数":s.lx_new||0, "当月拉新复购率":s.lx_new?Math.round((s.lx_new_rebuy||0)/s.lx_new*1000)/10:0,
   };
@@ -554,10 +542,6 @@ const commonMetricCols = [
   {key:'会员卡店均净收入',label:'会员卡店均净收入',sortable:true,prefix:'¥'},
   {key:'会员卡店均拉新净收入',label:'会员卡拉新店均净收入',sortable:true,prefix:'¥'},
   {key:'会员卡店均复购净收入',label:'会员卡复购店均净收入',sortable:true,prefix:'¥'},
-  {key:'连续包季人数',label:'连续包季人数',sortable:true,suffix:'人'},
-  {key:'连续包季复购率',label:'连续包季复购率',sortable:true,suffix:'%',bench:nat.连续包季复购率,lower:true},
-  {key:'0-30天连续包季人数',label:'0-30天连续包季人数',sortable:true,suffix:'人'},
-  {key:'0-30天连续包季复购率',label:'0-30天连续包季复购率',sortable:true,suffix:'%',bench:nat['0-30天连续包季复购率'],lower:true},
   {key:'拉新完成率',label:'拉新完成率',sortable:true,suffix:'%',bench:nat.拉新完成率,lower:true},
   {key:'拉新店均净收入',label:'拉新店均净收入',sortable:true,prefix:'¥'},
   {key:'店均拉新',label:'店均拉新',sortable:true,suffix:'人',bench:nat.店均拉新,lower:true},
@@ -582,7 +566,6 @@ const cityCats=[
   {label:'',span:7},
   {label:'复购核心数据',span:6,color:'#b71c1c'},
   {label:'会员卡',span:3,color:'#880e4f'},
-  {label:'连续包季复购',span:4,color:'#1a237e'},
   {label:'拉新核心数据',span:11,color:'#004d40'},
   {label:'当月拉新复购',span:2,color:'#e65100'},
 ];
@@ -596,7 +579,6 @@ const mgrCats=[
   {label:'',span:7},
   {label:'复购核心数据',span:6,color:'#b71c1c'},
   {label:'会员卡',span:3,color:'#880e4f'},
-  {label:'连续包季复购',span:4,color:'#1a237e'},
   {label:'拉新核心数据',span:11,color:'#004d40'},
   {label:'当月拉新复购',span:2,color:'#e65100'},
 ];
@@ -617,10 +599,6 @@ const storeCols=[
   {key:'会员卡店均净收入',label:'会员卡店均净收入',sortable:true,prefix:'¥'},
   {key:'会员卡店均拉新净收入',label:'拉新会员卡店均',sortable:true,prefix:'¥'},
   {key:'会员卡店均复购净收入',label:'复购会员卡店均',sortable:true,prefix:'¥'},
-  {key:'连续包季人数',label:'连续包季人数',sortable:true,suffix:'人'},
-  {key:'连续包季复购率',label:'连续包季复购率',sortable:true,suffix:'%',bench:nat.连续包季复购率,lower:true},
-  {key:'0-30天连续包季人数',label:'0-30天连续包季人数',sortable:true,suffix:'人'},
-  {key:'0-30天连续包季复购率',label:'0-30天连续包季复购率',sortable:true,suffix:'%',bench:nat['0-30天连续包季复购率'],lower:true},
   {key:'拉新完成率',label:'拉新完成率',sortable:true,suffix:'%',bench:nat.拉新完成率,lower:true},
   {key:'拉新店均净收入',label:'拉新店均收入',sortable:true,prefix:'¥'},
   {key:'店均拉新',label:'拉新用户',sortable:true,suffix:'人',bench:nat.店均拉新,lower:true},
@@ -639,7 +617,6 @@ const storeCats=[
   {label:'',span:7},
   {label:'复购核心数据',span:5,color:'#b71c1c'},
   {label:'会员卡',span:3,color:'#880e4f'},
-  {label:'连续包季复购',span:4,color:'#1a237e'},
   {label:'拉新核心数据',span:11,color:'#004d40'},
   {label:'当月拉新复购',span:2,color:'#e65100'},
 ];

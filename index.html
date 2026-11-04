@@ -207,13 +207,14 @@ const ALL_TYPES = [...new Set(RAW_STORES.map(s=>s.type))].sort();
 const ALL_STATUSES = [...new Set(RAW_STORES.map(s=>s.status))].sort();
 
 const ovFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
-const mgrFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
+const ALL_MGRS = [...new Set(RAW_STORES.map(s=>s.mgr))].filter(m=>m&&m!=='(null)').sort();
+const mgrFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES), mgrs: new Set(ALL_MGRS)};
 const storeFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
 const dtlFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
 const dqzFilter = {types: new Set(ALL_TYPES), statuses: new Set(ALL_STATUSES)};
 
 function filterStores(filter) {
-  return RAW_STORES.filter(s => filter.types.has(s.type) && filter.statuses.has(s.status));
+  return RAW_STORES.filter(s => filter.types.has(s.type) && filter.statuses.has(s.status) && (!filter.mgrs || filter.mgrs.has(s.mgr)));
 }
 
 function aggStores(stores) {
@@ -935,10 +936,29 @@ function renderOverview(){
   document.getElementById('ovContent').innerHTML = buildTable(data.cities, cityCols, cityCats, sortKey, sortDir, 'toggleSort', data.total_stores, gv, 'ov');
   document.getElementById('overviewPanel').className = 'fade-in';
 }
+function mgrPick(v){
+  if (v === '') { mgrFilter.mgrs = new Set(ALL_MGRS); }
+  else { mgrFilter.mgrs = new Set([v]); }
+  var sel = document.getElementById('mgrSel');
+  if (sel) sel.value = v;
+  renderManager();
+}
 function renderManager(){
   const data = buildFilteredData(mgrFilter);
   nat = data.national;
   buildFilterBar('mgrFilterBar', mgrFilter, renderManager, renderManager);
+  var mfb = document.getElementById('mgrFilterBar');
+  var msel = document.getElementById('mgrSel');
+  if (!msel && mfb) {
+    var wrap = document.createElement('span');
+    wrap.style.marginLeft = '16px';
+    wrap.innerHTML = '<label style="font-size:13px;color:#5f6368">区经：</label>'
+      + '<select id="mgrSel" onchange="mgrPick(this.value)" style="padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;background:#fff;min-width:120px">'
+      + '<option value="">全部区经（' + ALL_MGRS.length + '）</option>'
+      + ALL_MGRS.map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('')
+      + '</select>';
+    mfb.appendChild(wrap);
+  }
   nat = data.national;
   document.getElementById('mgrContent').innerHTML = buildTable(data.managers, mgrCols, mgrCats, mgrSortKey, mgrSortDir, 'toggleMgrSort', data.total_stores, gv, 'mgr');
   document.getElementById('managerPanel').className = 'fade-in';

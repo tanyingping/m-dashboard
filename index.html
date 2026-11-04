@@ -155,6 +155,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
       <button class="tab-btn" data-tab="coach" onclick="switchTab('coach')">教练排名</button>
       <button class="tab-btn" data-tab="topstore" onclick="switchTab('topstore')">头部门店奖励</button>
       <button class="tab-btn" data-tab="bigcard" onclick="switchTab('bigcard')">M馆大卡奖</button>
+      <button class="tab-btn" data-tab="battle" onclick="switchTab('battle')" style="background:linear-gradient(135deg,#7f1d1d,#b45309);color:#fff;font-weight:800">双11战报</button>
     </div>
     <div id="overviewPanel" class="fade-in"><div id="ovFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="ovContent"></div></div>
     <div id="managerPanel" class="detail"><div id="mgrFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="mgrContent"></div></div>
@@ -186,6 +187,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:24
       <div id="bigcardSummary" style="margin-bottom:12px"></div>
       <div id="bigcardContent"></div>
     </div>
+    <div id="battlePanel" class="detail" style="background:#180a0a"><div id="battleContent"></div></div>
     <div id="detailPanel" class="detail"><div id="dtlFilterBar" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center"></div><div id="dtlContent"></div></div>
     <div id="regionPKPanel" class="detail"></div>
     
@@ -413,6 +415,7 @@ function switchTab(tab){
   document.getElementById('coachPanel').style.display=tab==='coach'?'block':'none';
   document.getElementById('topstorePanel').style.display=tab==='topstore'?'block':'none';
   document.getElementById('bigcardPanel').style.display=tab==='bigcard'?'block':'none';
+  document.getElementById('battlePanel').style.display=tab==='battle'?'block':'none';
   document.getElementById('regionPKPanel').style.display=tab==='regionpk'?'block':'none';
   document.getElementById('dqzPanel').style.display=tab==='dqz'?'block':'none';
   document.getElementById('dailyPanel').style.display=tab==='daily'?'block':'none';
@@ -424,6 +427,7 @@ function switchTab(tab){
   if(tab==='coach')renderCoach();
   if(tab==='topstore')renderTopStore();
   if(tab==='bigcard')renderBigCard();
+  if(tab==='battle')renderBattle();
   if(tab==='regionpk')renderRegionPK();
   if(tab==='dqz')renderDqz();
   if(tab==='daily')renderDailyCombined();
@@ -694,6 +698,209 @@ function renderBigCard(){
   });
   h+='</div>';
   h+='<div style="font-size:12px;color:#94a3b8;margin-top:10px">参赛=11/1前开业的M馆门店（名不含「包月私教」，含黑金馆）；档位按11/1不限次+限次用户数划分，当月固定。黑金馆两家用户数借用看板包月用户数。奖励=(大卡单数-档位底线)×单价，负数计0。本Tab数据随「FM订单明细」导出刷新，日常业绩表更新不影响。</div>';
+  panel.innerHTML=h;
+}
+
+
+// === 双11战报（数据播报页；暗红主题）===
+function btEsc(x){return String(x==null?'':x).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;');}
+function btDateStr(){
+  var d=(document.getElementById('dateDisplay').textContent||'').match(/(\d{4})-(\d{2})-(\d{2})/);
+  return d? (parseInt(d[2],10)+'月'+parseInt(d[3],10)+'日') : '';
+}
+function btDayN(){
+  var d=(document.getElementById('dateDisplay').textContent||'').match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(!d)return 1;
+  var start=new Date(d[1]+'-11-01');
+  var cur=new Date(d[1]+'-'+d[2]+'-'+d[3]);
+  var n=Math.floor((cur-start)/86400000);
+  return n<1?1:n; // 数据为T+1：日N=日期-1，但至少1
+}
+function renderBattle(){
+  var panel=document.getElementById('battleContent'); if(!panel) return;
+  // ---- 01 大盘 ----
+  var all=RAW_STORES;
+  var pt=all.reduce(function(a,s){return a+s.pt;},0);
+  var ns=all.reduce(function(a,s){return a+s.ns;},0);
+  var cr=pt?ns/pt*100:0;
+  var gap=Math.max(0,pt-ns);
+  // 当日GMV：HISTORY_PK 相邻key差
+  var keys=Object.keys(HISTORY_PK).map(Number).sort(function(a,b){return a-b;});
+  var dayGmv=null,dayLabel='';
+  if(keys.length>=2){
+    var k2=keys[keys.length-1],k1=keys[keys.length-2];
+    var ns2=HISTORY_PK[k2].s.reduce(function(a,x){return a+x.ns;},0);
+    var ns1=HISTORY_PK[k1].s.reduce(function(a,x){return a+x.ns;},0);
+    dayGmv=ns2-ns1; dayLabel=k1+'日→'+k2+'日';
+  } else if(keys.length===1){
+    var ns1=HISTORY_PK[keys[0]].s.reduce(function(a,x){return a+x.ns;},0);
+    dayGmv=ns1; dayLabel='开卖首日(1-'+keys[0]+'日累计)';
+  }
+  var left=30-btDayN();
+  var css='\n.bt-hero{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px}\n'
+   +'.bt-card{flex:1;min-width:150px;background:linear-gradient(160deg,#2d1010,#3b1414);border:1px solid rgba(251,191,36,.25);border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.4)}\n'
+   +'.bt-card .lb{font-size:12px;color:#d4a373;letter-spacing:1px;margin-bottom:6px}\n'
+   +'.bt-card .v{font-size:26px;font-weight:900;color:#fde68a;line-height:1.1}\n'
+   +'.bt-card .v small{font-size:13px;font-weight:600;color:#d4a373}\n'
+   +'.bt-card.hot{background:linear-gradient(160deg,#7f1d1d,#4c0519);border-color:#fbbf24}\n'
+   +'.bt-card.hot .v{color:#fff;font-size:30px}\n'
+   +'.bt-sec{margin:26px 0 10px;display:flex;align-items:center;gap:10px}\n'
+   +'.bt-sec .no{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#180a0a;font-weight:900;font-size:15px;border-radius:8px;padding:4px 10px}\n'
+   +'.bt-sec .tt{font-size:17px;font-weight:900;color:#fde68a;letter-spacing:1px}\n'
+   +'.bt-sec .rn{margin-left:auto;font-size:12px;color:#d4a373}\n'
+   +'.bt-bar{height:14px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin:10px 0 6px;position:relative}\n'
+   +'.bt-bar i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:99px}\n'
+   +'.bt-bar b{position:absolute;top:-2px;font-size:10px;color:#fde68a;font-weight:800}\n'
+   +'.bt-rank{display:flex;gap:12px;flex-wrap:wrap}\n'
+   +'.bt-pod{flex:1;min-width:200px;background:linear-gradient(160deg,#2d1010,#3b1414);border:1px solid rgba(251,191,36,.25);border-radius:14px;padding:14px 16px}\n'
+   +'.bt-pod .nm{font-size:15px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px}\n'
+   +'.bt-medal{font-size:11px;font-weight:900;padding:2px 8px;border-radius:99px}\n'
+   +'.bt-medal.g1{background:#fbbf24;color:#180a0a}.bt-medal.g2{background:#cbd5e1;color:#1f2937}.bt-medal.g3{background:#b45309;color:#fff}\n'
+   +'.bt-pod .pc{font-size:28px;font-weight:900;color:#fde68a;margin:6px 0 2px}\n'
+   +'.bt-pod .sm{font-size:11px;color:#d4a373;line-height:1.7}\n'
+   +'.bt-pk{background:linear-gradient(160deg,#2d1010,#3b1414);border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:12px 16px;margin-bottom:10px}\n'
+   +'.bt-pk .ttl{font-size:13px;font-weight:900;color:#fde68a;margin-bottom:8px}\n'
+   +'.bt-pk .ttl small{color:#d4a373;font-weight:600}\n'
+   +'.bt-pk .row{display:flex;align-items:center;gap:10px;margin:5px 0}\n'
+   +'.bt-pk .row .nm{width:80px;font-size:12px;color:#fff;font-weight:700}\n'
+   +'.bt-pk .row .bb{flex:1;height:16px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}\n'
+   +'.bt-pk .row .bb i{display:block;height:100%;border-radius:99px}\n'
+   +'.bt-pk .row .pv{width:64px;text-align:right;font-size:13px;font-weight:900;color:#fde68a}\n'
+   +'.bt-pk .tag{font-size:10px;font-weight:900;padding:1px 7px;border-radius:6px;margin-left:6px}\n'
+   +'.bt-pk .win{background:#fbbf24;color:#180a0a}.bt-pk .lose{background:rgba(255,255,255,.1);color:#d4a373}\n'
+   +'.bt-ml{background:linear-gradient(160deg,#2d1010,#3b1414);border:1px solid rgba(251,191,36,.25);border-radius:14px;padding:14px 18px}\n'
+   +'.bt-mr{display:flex;align-items:center;gap:10px;margin:7px 0}\n'
+   +'.bt-mr .no{width:26px;font-size:13px;font-weight:900;color:#fde68a;text-align:center}\n'
+   +'.bt-mr .no.top{color:#fbbf24}\n'
+   +'.bt-mr .nm{width:64px;font-size:13px;color:#fff;font-weight:700}\n'
+   +'.bt-mr .bb{flex:1;height:12px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}\n'
+   +'.bt-mr .bb i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:99px}\n'
+   +'.bt-mr .pv{width:70px;text-align:right;font-size:13px;font-weight:800;color:#fde68a}\n'
+   +'.bt-mr .sx{width:70px;text-align:right;font-size:11px;color:#d4a373}\n'
+   +'.bt-mr.low .nm,.bt-mr.low .pv{color:#fca5a5}\n'
+   +'.bt-note{background:linear-gradient(160deg,#3b1414,#571c1c);border:1px solid rgba(251,191,36,.35);border-radius:14px;padding:16px 20px;margin-top:18px}\n'
+   +'.bt-note h4{font-size:14px;font-weight:900;color:#fbbf24;margin-bottom:10px;letter-spacing:1px}\n'
+   +'.bt-note li{font-size:12.5px;color:#fde68a;line-height:2;list-style:none;padding-left:16px;position:relative}\n'
+   +'.bt-note li:before{content:"◆";position:absolute;left:0;color:#f59e0b;font-size:9px;top:2px}\n'
+   +'.bt-ft{margin-top:14px;font-size:11px;color:#a1746a;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}\n';
+  if(!document.getElementById('btStyle')){
+    var st=document.createElement('style'); st.id='btStyle'; st.textContent=css;
+    document.head.appendChild(st);
+  }
+  var h='<div style="background:radial-gradient(1200px 300px at 50% -80px,#571c1c,#180a0a);border-radius:18px;padding:26px 24px 18px;margin-bottom:6px">';
+  h+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
+  h+='<span style="border:1px solid #f59e0b;color:#fbbf24;font-size:12px;font-weight:800;border-radius:99px;padding:5px 14px;letter-spacing:2px">FM 大促作战室 · 每日战报</span>';
+  h+='<span style="font-size:30px;font-weight:900;color:#fff">双11 <span style="color:#fbbf24">战报</span> <span style="font-size:18px">DAY '+btDayN()+'</span></span>';
+  h+='<span style="margin-left:auto;font-size:12px;color:#d4a373">数据口径：当月累计(T+1) | 截至 '+btDateStr()+' | 赛区 × 区经 双维战况</span>';
+  h+='</div>';
+  // 01
+  h+='<div class="bt-sec"><span class="no">01</span><span class="tt">大盘战况</span><span class="rn">全司 9 赛区 · 区经若干（全量492家门店口径）</span></div>';
+  h+='<div class="bt-hero">';
+  h+='<div class="bt-card"><div class="lb">当月目标</div><div class="v">'+(pt/100000000).toFixed(2)+'<small> 亿</small></div></div>';
+  h+='<div class="bt-card"><div class="lb">当月累计净收入</div><div class="v">'+(ns/10000).toFixed(0)+'<small> 万</small></div></div>';
+  h+='<div class="bt-card hot"><div class="lb">当月达成率</div><div class="v">'+cr.toFixed(2)+'<small> %</small></div></div>';
+  h+='<div class="bt-card"><div class="lb">近日净增量'+(dayLabel?' · '+dayLabel:'')+'</div><div class="v">'+(dayGmv!=null?(dayGmv/10000).toFixed(1):'—')+'<small> 万</small></div></div>';
+  h+='</div>';
+  h+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#d4a373;flex-wrap:wrap;gap:6px">';
+  h+='<span>距离当月目标还差 <b style="color:#fde68a">'+(gap/10000).toFixed(0)+' 万</b></span><span>剩余 <b style="color:#fde68a">'+left+' 天</b></span></div>';
+  h+='<div class="bt-bar"><i style="width:'+Math.min(100,cr)+'%"></i><b style="left:'+Math.min(92,cr)+'%">已完成 '+cr.toFixed(2)+'%</b></div>';
+  // 02 赛区TOP3
+  var regs=Object.keys(REGION_PK).map(function(k){
+    var r=REGION_PK[k];
+    return {name:k,cr:r.cr,ns:r.ns,pt:r.pt,gap:Math.max(0,r.pt-r.ns)};
+  }).sort(function(a,b){return b.cr-a.cr;});
+  var gname={}; GROUPS_PK.forEach(function(g){g.regions.forEach(function(r){gname[r]=g.label;});});
+  h+='<div class="bt-sec"><span class="no">02</span><span class="tt">赛区达成率 TOP3</span><span class="rn">按当月达成率排序 · FM私教馆+FM包月馆全状态</span></div>';
+  h+='<div class="bt-rank">';
+  regs.slice(0,3).forEach(function(r,i){
+    var m=['g1','g2','g3'][i];
+    h+='<div class="bt-pod"><div class="nm"><span class="bt-medal '+m+'">NO.'+(i+1)+'</span>'+btEsc(r.name.replace('赛区',''))+'</div>';
+    h+='<div class="pc">'+r.cr+'%</div>';
+    h+='<div class="sm">累计 '+(r.ns/10000).toFixed(0)+'万 / 目标 '+(r.pt/10000).toFixed(0)+'万<br>'+(gname[r.name]||'')+' · 缺口 '+(r.gap/10000).toFixed(0)+'万'+(i===0?'（全司最小）':'')+'</div></div>';
+  });
+  h+='</div>';
+  // 03 四组PK
+  h+='<div class="bt-sec"><span class="no">03</span><span class="tt">四组赛区 PK</span><span class="rn">组内对战 · 组均值排名</span></div>';
+  var gavg=[];
+  GROUPS_PK.forEach(function(g){
+    var ms=g.regions.map(function(r){return REGION_PK[r]?REGION_PK[r].cr:0;});
+    var avg=ms.reduce(function(a,b){return a+b;},0)/ms.length;
+    gavg.push({label:g.label,prize:g.prize,avg:avg,regs:g.regions});
+  });
+  gavg.sort(function(a,b){return b.avg-a.avg;});
+  var maxcr=Math.max.apply(null,regs.map(function(r){return r.cr;}));
+  gavg.forEach(function(g,gi){
+    h+='<div class="bt-pk"><div class="ttl">'+g.label+' <small>· 组均值 '+g.avg.toFixed(2)+'% · 全司第'+(gi+1)+' · 奖金¥'+g.prize+'</small></div>';
+    var best=g.regs.slice().sort(function(a,b){return REGION_PK[b].cr-REGION_PK[a].cr;})[0];
+    g.regs.forEach(function(r){
+      var d=REGION_PK[r]; if(!d)return;
+      var isWin=(r===best);
+      var cc=isWin?'#fbbf24':'#7f1d1d';
+      h+='<div class="row"><span class="nm">'+btEsc(r.replace('赛区',''))+'</span>';
+      h+='<span class="bb"><i style="width:'+(d.cr/maxcr*100)+'%;background:linear-gradient(90deg,'+cc+','+(isWin?'#f59e0b':'#b45309')+')"></i></span>';
+      h+='<span class="pv">'+d.cr+'%</span>';
+      h+='<span class="tag '+(isWin?'win':'lose')+'">'+(isWin?'冠':'追')+'</span></div>';
+    });
+    h+='</div>';
+  });
+  // 区经三榜数据（FM私教馆+营业中，排除李崇义）
+  var mgrs={};
+  RAW_STORES.forEach(function(s){
+    if(s.type!=='FM私教馆'||s.status!=='营业中'||s.mgr==='李崇义'||s.mgr==='(null)')return;
+    var m=mgrs[s.mgr]||(mgrs[s.mgr]={pt:0,ns:0,n:0,pz:0,pzU:0});
+    m.pt+=s.pt;m.ns+=s.ns;m.n++;m.pz+=s.pz_sold;m.pzU+=s.pz_used;
+  });
+  var mlist=Object.keys(mgrs).map(function(k){var m=mgrs[k];m.name=k;
+    m.cr=m.pt>0?m.ns/m.pt*100:0; m.avg=m.n>0?m.ns/m.n:0; m.pzr=m.pz>0?m.pzU/m.pz*100:null; return m;});
+  var mavgCr=mlist.length?mlist.reduce(function(a,m){return a+m.ns;},0)/Math.max(1,mlist.reduce(function(a,m){return a+m.pt;},0))*100:0;
+  var mBelow=mlist.filter(function(m){return m.cr<mavgCr;}).length;
+  // 04 完成度
+  var byCr=mlist.slice().sort(function(a,b){return b.cr-a.cr;});
+  h+='<div class="bt-sec"><span class="no">04</span><span class="tt">区经完成度总榜</span><span class="rn">'+mlist.length+' 人 · 全司均值 '+mavgCr.toFixed(1)+'% · '+mBelow+' 人低于均值（FM私教馆+营业中口径）</span></div>';
+  h+='<div class="bt-ml">';
+  byCr.forEach(function(m,i){
+    h+='<div class="bt-mr'+(m.cr<mavgCr?' low':'')+'"><span class="no'+(i<3?' top':'')+'">'+(i+1)+'</span><span class="nm">'+btEsc(m.name)+'</span>';
+    h+='<span class="bb"><i style="width:'+Math.min(100,m.cr)+'%"></i></span>';
+    h+='<span class="pv">'+m.cr.toFixed(1)+'%</span><span class="sx">'+(m.ns/10000).toFixed(0)+'万/'+(m.pt/10000).toFixed(0)+'万</span></div>';
+  });
+  h+='</div>';
+  // 05 店均净收入
+  var byAvg=mlist.slice().sort(function(a,b){return b.avg-a.avg;});
+  var maxAvg=byAvg[0]?byAvg[0].avg:1;
+  h+='<div class="bt-sec"><span class="no">05</span><span class="tt">区经 · 营业中店均净收入排名</span><span class="rn">店均 = 净收入/营业中门店数</span></div>';
+  h+='<div class="bt-ml">';
+  byAvg.forEach(function(m,i){
+    h+='<div class="bt-mr"><span class="no'+(i<3?' top':'')+'">'+(i+1)+'</span><span class="nm">'+btEsc(m.name)+'</span>';
+    h+='<span class="bb"><i style="width:'+(m.avg/maxAvg*100)+'%"></i></span>';
+    h+='<span class="pv">'+(m.avg/10000).toFixed(2)+'万</span><span class="sx">'+m.n+'家 · 共'+(m.ns/10000).toFixed(0)+'万</span></div>';
+  });
+  h+='</div>';
+  // 06 膨胀金使用率
+  var byPz=mlist.filter(function(m){return m.pz>0;}).sort(function(a,b){return b.pzr-a.pzr;});
+  h+='<div class="bt-sec"><span class="no">06</span><span class="tt">区经 · 膨胀金使用率排名</span><span class="rn">已使用人数/售卖人数（按人计，剔已失效）</span></div>';
+  h+='<div class="bt-ml">';
+  byPz.forEach(function(m,i){
+    h+='<div class="bt-mr"><span class="no'+(i<3?' top':'')+'">'+(i+1)+'</span><span class="nm">'+btEsc(m.name)+'</span>';
+    h+='<span class="bb"><i style="width:'+Math.min(100,m.pzr)+'%"></i></span>';
+    h+='<span class="pv">'+m.pzr.toFixed(1)+'%</span><span class="sx">'+m.pzU+'/'+m.pz+'人</span></div>';
+  });
+  h+='</div>';
+  // 今日看点（自动生成）
+  var top1=regs[0],worst=regs[regs.length-1];
+  var g1w=gavg[0],glast=gavg[gavg.length-1];
+  var gapRegs=regs.slice().sort(function(a,b){return b.gap-a.gap;});
+  var bigGaps=gapRegs.slice(0,4);
+  var mBottom=byCr.slice(-5).map(function(m){return m.name;});
+  var pzTop=byPz[0];
+  h+='<div class="bt-note"><h4>◆ 今日看点与动作</h4><ul>';
+  h+='<li><b>赛区领跑</b>：'+btEsc(top1.name)+' '+top1.cr+'% 居首'+'；'+btEsc(g1w.label)+'组均值 '+g1w.avg.toFixed(2)+'% 拿下全司组第一，领先末组 '+(g1w.avg-glast.avg).toFixed(1)+'pp</li>';
+  h+='<li><b>最大警报</b>：'+btEsc(worst.name)+' '+worst.cr+'%，与榜首差 '+(top1.cr-worst.cr).toFixed(1)+'pp，缺口 '+(worst.gap/10000).toFixed(0)+'万，需专项复盘</li>';
+  h+='<li><b>体量型缺口</b>：'+bigGaps.map(function(r){return btEsc(r.name.replace('赛区',''))+' '+ (r.gap/10000).toFixed(0)+'万';}).join('、')+'，四区合计占全司缺口 '+Math.round(bigGaps.reduce(function(a,r){return a+r.gap;},0)/Math.max(1,gapRegs.reduce(function(a,r){return a+r.gap;},0))*100)+'%</li>';
+  h+='<li><b>区经梯队</b>：'+mBelow+' 人低于全司均值 '+mavgCr.toFixed(1)+'%，末5位（'+btEsc(mBottom.join('/'))+'）需一对一复盘</li>';
+  if(pzTop)h+='<li><b>膨胀金亮点</b>：'+btEsc(pzTop.name)+' 使用率 '+pzTop.pzr.toFixed(1)+'%（'+pzTop.pzU+'/'+pzTop.pz+'人）领跑，可复制其券话术与追使用动作</li>';
+  h+='</ul></div>';
+  h+='<div class="bt-ft"><span>FM · 双11大促战报</span><span>数据截至 '+btDateStr()+' | 口径：当月累计净收入（与看板一致，非GMV）</span></div>';
+  h+='</div>';
   panel.innerHTML=h;
 }
 

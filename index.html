@@ -1065,8 +1065,15 @@ function renderRace(){
     glead.push(g.label+' '+rcEsc(ranked[0])+' '+zones[ranked[0]].cr.toFixed(1)+'%');
   });
   h+='<div class="rc-note"><h4>◆ 赛马看点</h4><ul>';
-  h+='<li><b>当前领跑</b>：'+rcEsc(top)+' '+top+'%… '.replace('%… ','')+'；（'+all[0].replace? '':''+'）
-';
+  var glead2=[]; RACE_910.groups.forEach(function(g){
+    var rk=g.regions.slice().sort(function(a,b){return zones[b].cr-zones[a].cr;});
+    glead2.push(g.label+' '+rcEsc(rk[0])+' '+zones[rk[0]].cr.toFixed(1)+'%');
+  });
+  var bigGap=all.slice().sort(function(a,b){return (zones[b].pt-zones[b].ns)-(zones[a].pt-zones[a].ns);}).slice(0,3);
+  h+='<li><b>当前领跑</b>：'+rcEsc(top)+' 达成 '+zones[top].cr.toFixed(1)+'%；垫底 '+rcEsc(worst)+' '+zones[worst].cr.toFixed(1)+'%，差 '+(zones[top].cr-zones[worst].cr).toFixed(1)+'pp</li>';
+  h+='<li><b>四组领先</b>：'+glead2.join(' · ')+'</li>';
+  h+='<li><b>80%底线</b>：当前 '+ok80+'/'+znames.length+' 个赛区达标'+(ok80===0?'——11月目标为整月口径、当前仅过月初，月底前仍有追赶空间':'')+'</li>';
+  h+='<li><b>缺口最大</b>：'+bigGap.map(function(z){return rcEsc(z.replace('赛区',''))+' '+((zones[z].pt-zones[z].ns)/10000).toFixed(0)+'万';}).join('、')+'</li>';
   h+='</ul></div>';
   h+='<div style="margin-top:12px;font-size:11px;color:#a3b18a;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">';
   h+='<span>FM · 百日大战城市赛马</span><span>9/10月为固定快照 · 11月随每日业绩表刷新 · 以 11/30 结算为准</span></div>';

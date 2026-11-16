@@ -799,7 +799,7 @@ function renderBattle(){
   h+='<span style="margin-left:auto;font-size:12px;color:#d4a373">数据口径：当月累计(T+1) | 截至 '+btDateStr()+' | 赛区 × 区经 双维战况</span>';
   h+='</div>';
   // 01
-  h+='<div class="bt-sec"><span class="no">01</span><span class="tt">大盘战况</span><span class="rn">全司 9 赛区 · 全量492家门店（全馆型）</span></div>';
+  h+='<div class="bt-sec"><span class="no">01</span><span class="tt">大盘战况</span><span class="rn">全司 9 赛区 · 全量'+RAW_STORES.length+'家门店（全馆型）</span></div>';
   h+='<div class="bt-hero">';
   h+='<div class="bt-card"><div class="lb">当月目标</div><div class="v">'+(pt/100000000).toFixed(2)+'<small> 亿</small></div></div>';
   h+='<div class="bt-card"><div class="lb">当月累计净收入</div><div class="v">'+(ns/10000).toFixed(0)+'<small> 万</small></div></div>';
